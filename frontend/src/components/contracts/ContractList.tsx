@@ -18,6 +18,8 @@ interface ContractListProps {
   refreshTrigger?: number;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export function ContractList({ refreshTrigger }: ContractListProps) {
   const { activeTenant } = useTenant();
   const { token } = useAuth();
@@ -37,7 +39,7 @@ export function ContractList({ refreshTrigger }: ContractListProps) {
 
       setLoading(true);
       try {
-        const res = await fetch("/api/contracts", {
+        const res = await fetch(`${API_BASE_URL}/api/contracts`, {
           headers: {
             "x-tenant-id": activeTenant.id,
             "Authorization": `Bearer ${token}`
@@ -63,14 +65,14 @@ export function ContractList({ refreshTrigger }: ContractListProps) {
 
     fetchContracts();
     return () => { current = false; };
-  }, [activeTenant, token, refreshTrigger]);
+  }, [activeTenant?.id, token, refreshTrigger]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'SIGNED': return 'text-green-400 bg-green-500/10 border-green-500/20';
       case 'PENDING': return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20';
       case 'DRAFT': return 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20';
-      default: return 'text-zinc-400 bg-zinc-500/10';
+      default: return 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20';
     }
   };
 
@@ -112,13 +114,17 @@ export function ContractList({ refreshTrigger }: ContractListProps) {
                   </span>
                 </td>
                 <td className="px-6 py-5 text-xs text-zinc-400">
-                  {new Date(contract.createdAt).toLocaleDateString()}
+                  {new Date(contract.createdAt).toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                  })}
                 </td>
                 <td className="px-6 py-5 text-right">
                   <div className="flex justify-end gap-2 text-zinc-400">
                     {contract.fileUrl && (
                       <a 
-                        href={`${window.location.origin.replace(':3000', ':3001')}/api/contracts/download/${contract.id}`}
+                        href={`${API_BASE_URL}/api/contracts/download/${contract.id}`}
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="p-1.5 rounded-lg hover:bg-primary/10 hover:text-primary transition-all active:scale-95 flex items-center gap-1"

@@ -1,8 +1,15 @@
-import { IsString, IsOptional, MaxLength } from 'class-validator';
+import { IsString, IsOptional, MaxLength, IsNotEmpty, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+
+export enum ContractStatus {
+  DRAFT = 'DRAFT',
+  SIGNED = 'SIGNED',
+  EXPIRED = 'EXPIRED',
+}
 
 export class CreateContractDto {
   @ApiProperty({ description: 'The title of the contract' })
+  @IsNotEmpty()
   @IsString()
   @MaxLength(255)
   title: string;
@@ -16,6 +23,7 @@ export class CreateContractDto {
 export class UpdateContractDto {
   @ApiProperty({ description: 'The title of the contract', required: false })
   @IsOptional()
+  @IsNotEmpty()
   @IsString()
   @MaxLength(255)
   title?: string;
@@ -25,8 +33,8 @@ export class UpdateContractDto {
   @IsString()
   content?: string;
 
-  @ApiProperty({ description: 'The status of the contract', enum: ['DRAFT', 'SIGNED', 'EXPIRED'], required: false })
+  @ApiProperty({ description: 'The status of the contract', enum: ContractStatus, required: false })
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsEnum(ContractStatus)
+  status?: ContractStatus;
 }

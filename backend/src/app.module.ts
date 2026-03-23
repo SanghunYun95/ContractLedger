@@ -1,7 +1,6 @@
-import { Module, Global } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import * as path from 'path';
 import { Tenant } from './domain/tenant.entity';
 import { User } from './domain/user.entity';
 import { AuditLog } from './audit/audit-log.entity';
@@ -13,11 +12,8 @@ import { AuthModule } from './auth/auth.module';
 import { ContractModule } from './contract/contract.module';
 import { Contract } from './domain/contract.entity';
 import { JwtModule } from '@nestjs/jwt';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { StorageService } from './common/services/storage.service';
-import { DiskStorageService } from './common/services/disk-storage.service';
+import { StorageModule } from './common/storage/storage.module';
 
-@Global()
 @Module({
   imports: [
     JwtModule.register({
@@ -34,22 +30,18 @@ import { DiskStorageService } from './common/services/disk-storage.service';
       type: 'sqlite',
       database: 'database.sqlite',
       entities: [Tenant, User, AuditLog, Contract],
-      synchronize: process.env.NODE_ENV !== 'production', // 개발 환경에서만 동기화 활성화
+      synchronize: process.env.NODE_ENV === 'development', // 개발 환경에서만 동기화 활성화
     }),
     TypeOrmModule.forFeature([Tenant, User, AuditLog]),
     EventEmitterModule.forRoot(),
     AuthModule,
     ContractModule,
+    StorageModule,
   ],
   controllers: [NotificationController, AuditController],
   providers: [
     AuditService, 
     NotificationService,
-    {
-      provide: StorageService,
-      useClass: DiskStorageService,
-    },
   ],
-  exports: [StorageService],
 })
 export class AppModule {}
