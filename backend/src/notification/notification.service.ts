@@ -12,25 +12,33 @@ export class NotificationService {
       throw new BadRequestException('tenantId is required');
     }
 
+    const { tenantId, contractId, ...details } = payload;
+    const resourceId = contractId || 'res_default';
+
+    // Attempt notification; errors are caught and logged but do not throw further.
     try {
-      await this.sendSlackNotification(payload.tenantId, payload);
-      this.logger.log(`Mock notification sent to tenant ${payload.tenantId}`);
-
-      // Emit event to create audit log
-      this.eventEmitter.emit('audit.log.created', {
-        tenantId: payload.tenantId,
-        userId: 'ai_agent_01',
-        action: 'RISK_DETECTED',
-        resourceId: payload.contractId || 'res_default',
-        ipAddress: '127.0.0.1',
-        details: payload,
-      });
-
-      return { success: true, message: 'Notification received and audit log queued' };
+      await this.sendSlackNotification(tenantId, payload);
+      this.logger.log(`Notification sent to tenant ${tenantId}`);
     } catch (e) {
-      this.logger.error(`Failed to send notification: ${(e as Error).message}`);
-      throw new BadRequestException('Notification failed');
+      this.logger.error(`Notification failed for tenant ${tenantId}: ${(e as Error).message}`);
     }
+
+    // Always emit the audit log event if tenantId is present.
+    this.eventEmitter.emit('audit.log.created', {
+      tenantId,
+      userId: 'ai_agent_01',
+      action: 'RISK_DETECTED',
+      resourceId,
+      ipAddress: '127.0.0.1',
+      details,
+    });
+
+    return { 
+      success: true, 
+      message: 'Processed risk detection; audit log recorded.',
+      tenantId,
+      resourceId
+    };
   }
 
   // Mock implementation

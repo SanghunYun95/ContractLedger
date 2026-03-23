@@ -16,13 +16,13 @@ export class AuditLog {
   action: string;
 
   @Column({ nullable: true })
-  resourceId: string;
+  resourceId: string | null;
 
   @Column({ type: 'json', nullable: true })
-  details: Record<string, any>;
+  details: Record<string, unknown> | null;
 
   @Column({ nullable: true })
-  ipAddress: string;
+  ipAddress: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

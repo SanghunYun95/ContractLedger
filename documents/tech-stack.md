@@ -41,7 +41,8 @@ Supabase는 실행 환경에 따라 적절한 클라이언트를 사용해야 �
 
 ### 인증 (Authentication)
 - Supabase Auth를 사용하며, Next.js Middleware를 통해 세션을 관리하고 보호된 라우트로의 접근을 제어합니다.
-- 로그인/회원가입 상태 관리는 Supabase의 `onAuthStateChange` 이벤트를 활용하거나, Next.js Auth Helper를 사용합니다.
+- 로그인/회원가입 상태 관리는 Supabase의 `onAuthStateChange` 이벤트를 활용하거나, 공식 패키지인 `@supabase/ssr` (`createBrowserClient`, `createServerClient`)를 사용합니다.
+- 클라이언트 환경에서는 `createBrowserClient`, SSR 환경에서는 `createServerClient`를 사용하여 세션을 관리합니다.
 
 ---
 

@@ -14,6 +14,7 @@ Reference these guidelines when:
 - Optimizing bundle size or load times
 
 ## Rule Categories by Priority
+
 | Priority | Category | Impact | Prefix |
 |----------|----------|--------|--------|
 | 1 | Eliminating Waterfalls | CRITICAL | `async-` |
@@ -103,7 +104,7 @@ Reference these guidelines when:
 ## How to Use
 Read individual rule files for detailed explanations and code examples:
 
-```
+```text
 rules/async-parallel.md
 rules/bundle-barrel-imports.md
 ```

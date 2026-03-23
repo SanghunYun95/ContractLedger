@@ -15,7 +15,7 @@ import { AuditController } from './audit/audit.controller';
       type: 'sqlite',
       database: 'database.sqlite',
       entities: [Tenant, User, AuditLog],
-      synchronize: true, // Development only
+      synchronize: process.env.NODE_ENV !== 'production', // Development only
     }),
     TypeOrmModule.forFeature([Tenant, User, AuditLog]),
     EventEmitterModule.forRoot(),

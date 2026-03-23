@@ -36,5 +36,10 @@ This is the "Contract Ledger" platform, an AI-based Contract Lifecycle Managemen
 - Use `lucide-react` for beautiful, consistent iconography.
 - Keep the code clean, modular, and ready to be integrated with real backend APIs (mock the data fetching for now).
 - Provide responsive design (mobile-friendly) out of the box.
+- **Security & Accessibility:**
+  - Do not hardcode authentication tokens or secrets; use environment variables or mock tokens for local/dev.
+  - All interactive components must support keyboard navigation and focus management (tab, enter/space, arrow keys) and provide visible focus styles.
+  - Include ARIA roles/labels and semantic HTML for widgets (use aria-label, role, aria-expanded, aria-hidden where appropriate).
+  - Ensure text contrast and provide alt text for images.
 
 ---

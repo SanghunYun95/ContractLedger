@@ -8,12 +8,16 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
     const status = exception.getStatus();
+    const exceptionResponse = exception.getResponse();
+    
+    // Extract detailed error message (for ValidationPipe errors etc)
+    const message = (exceptionResponse as any).message || exception.message;
 
     response
       .status(status)
       .json({
         statusCode: status,
-        message: exception.message,
+        message: message,
         path: request.url,
       });
   }

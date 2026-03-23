@@ -10,12 +10,17 @@ export class TenantAuthGuard implements CanActivate {
     const tenantId = headers['x-tenant-id'];
     const authHeader = headers['authorization'];
 
-    if (!tenantId || !authHeader) {
-      throw new ForbiddenException('Invalid tenant or authorization');
+    if (typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
+      throw new ForbiddenException('Invalid authorization header');
     }
 
-    // Injecting the tenant context into the request
-    request.tenantId = tenantId;
+    if (typeof tenantId !== 'string' || !tenantId.trim()) {
+      throw new ForbiddenException('Invalid tenant identifier');
+    }
+
+    // TODO: Verify JWT signature and extract tenantId from claims to prevent spoofing
+    // request.tenantId = verifiedTenantId;
+    request.tenantId = tenantId.trim();
     
     return true;
   }
