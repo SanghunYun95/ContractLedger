@@ -1,0 +1,86 @@
+"use client";
+
+import React, { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      await login(email, password);
+    } catch (err: any) {
+      setError(err.message || "Failed to login");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-surface-container-low p-6">
+      <div className="w-full max-w-md glass-card rounded-3xl border border-outline-variant/10 p-10 space-y-8 shadow-2xl">
+        <div className="text-center space-y-2">
+          <div className="w-16 h-16 bg-primary-container/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/20">
+            <span className="material-symbols-outlined text-primary text-3xl" style={{fontVariationSettings: "'FILL' 1"}}>lock</span>
+          </div>
+          <h1 className="text-3xl font-headline font-extrabold tracking-tight text-on-surface">Contract Ledger</h1>
+          <p className="text-zinc-500 text-sm">Sign in to access your audit vault</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-label text-zinc-500 ml-1">Work Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="admin@acme.com"
+                className="w-full bg-surface-container-high rounded-xl px-4 py-3.5 text-on-surface border border-outline-variant/5 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-all"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-label text-zinc-500 ml-1">Security Key</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                className="w-full bg-surface-container-high rounded-xl px-4 py-3.5 text-on-surface border border-outline-variant/5 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          {error && (
+            <div className="bg-error-container/10 border border-error/20 p-4 rounded-xl flex gap-3 animate-shake">
+              <span className="material-symbols-outlined text-error text-lg">error</span>
+              <p className="text-error text-xs font-medium leading-relaxed">{error}</p>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-4 bg-primary text-on-primary-container rounded-2xl font-bold hover:scale-[1.01] active:scale-95 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2 group disabled:opacity-50"
+          >
+            {loading ? "Decrypting..." : "Access Vault"}
+            {!loading && <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>}
+          </button>
+        </form>
+
+        <p className="text-center text-[10px] text-zinc-600 uppercase tracking-widest font-bold pt-4">
+          Secured by Quantum-Grade Encryption
+        </p>
+      </div>
+    </div>
+  );
+}

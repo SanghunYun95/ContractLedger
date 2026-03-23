@@ -15,13 +15,13 @@ export class AuditLog {
   @Column()
   action: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   resourceId: string | null;
 
-  @Column({ type: 'json', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   details: Record<string, unknown> | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   ipAddress: string | null;
 
   @CreateDateColumn()

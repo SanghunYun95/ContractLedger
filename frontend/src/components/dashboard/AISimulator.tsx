@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useTenant } from "@/context/TenantContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface AISimulatorProps {
   onTrigger: (success: boolean) => void;
@@ -9,9 +10,11 @@ interface AISimulatorProps {
 
 export function AISimulator({ onTrigger }: AISimulatorProps) {
   const { activeTenant } = useTenant();
+  const { token } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const handleTrigger = async () => {
+    if (!token) return;
     setLoading(true);
     try {
       const response = await fetch("/api/notifications/webhook", {
@@ -19,7 +22,7 @@ export function AISimulator({ onTrigger }: AISimulatorProps) {
         headers: {
           "Content-Type": "application/json",
           "x-tenant-id": activeTenant.id,
-          "Authorization": "Bearer demo-token-123"
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
           type: "RISK_DETECTED",

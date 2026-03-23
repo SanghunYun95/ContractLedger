@@ -6,3 +6,7 @@ dist/
 .DS_Store
 coverage/
 coderabbit_comment.txt
+database.sqlite
+uploads/
+/backend/database.sqlite
+/backend/uploads/
