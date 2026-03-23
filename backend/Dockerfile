@@ -11,12 +11,18 @@ RUN npx nest build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+# 보안을 위해 비루트(non-root) 사용자 생성
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 ENV NODE_ENV=production
 
 COPY --from=builder /app/package*.json ./
 RUN npm install --only=production
 COPY --from=builder /app/dist ./dist
 
-# SQLite 사용 시 혹은 환경변수 설정용
+# 파일 권한 설정 및 사용자 전환
+RUN chown -R appuser:appgroup /app
+USER appuser
+
 EXPOSE 3001
 CMD ["node", "dist/main"]

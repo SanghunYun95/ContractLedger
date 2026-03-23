@@ -45,6 +45,7 @@ jobs:
 
       # Deploy Backend to Cloud Run
       - name: Deploy Backend
+        id: deploy_backend
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: backend
@@ -62,4 +63,4 @@ jobs:
           region: ${{ env.REGION }}
           env_vars: |
             NODE_ENV=production
-            API_URL=https://backend-url-here # 실제 배포 후 backend URL로 업데이트 필요
+            API_URL=${{ steps.deploy_backend.outputs.url }}
