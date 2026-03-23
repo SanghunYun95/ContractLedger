@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Contract } from '../domain/contract.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { StorageService } from '../common/services/storage.service';
+import { CreateContractDto, UpdateContractDto } from './dto/contract.dto';
 
 @Injectable()
 export class ContractService {
@@ -14,7 +15,7 @@ export class ContractService {
     private readonly storageService: StorageService,
   ) {}
 
-  async create(tenantId: string, contractData: Partial<Contract>, file?: any): Promise<Contract> {
+  async create(tenantId: string, contractData: CreateContractDto, file?: any): Promise<Contract> {
     const contract = this.contractRepository.create({
       status: 'DRAFT',
       ...contractData,
@@ -70,7 +71,7 @@ export class ContractService {
     return contract;
   }
 
-  async update(id: string, updateData: Partial<Contract>, tenantId: string): Promise<Contract> {
+  async update(id: string, updateData: UpdateContractDto, tenantId: string): Promise<Contract> {
     const contract = await this.findOne(id, tenantId);
     
     // Whitelist editable fields to prevent overwriting protected fields like tenantId

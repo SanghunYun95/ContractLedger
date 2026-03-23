@@ -27,7 +27,14 @@ export function ContractList({ refreshTrigger }: ContractListProps) {
   useEffect(() => {
     let current = true;
     const fetchContracts = async () => {
-      if (!token) return;
+      if (!token) {
+        if (current) {
+          setContracts([]);
+          setLoading(false);
+        }
+        return;
+      }
+
       setLoading(true);
       try {
         const res = await fetch("/api/contracts", {
@@ -36,11 +43,18 @@ export function ContractList({ refreshTrigger }: ContractListProps) {
             "Authorization": `Bearer ${token}`
           }
         });
-        if (res.ok && current) {
+        
+        if (!res.ok) {
+          if (current) setContracts([]);
+          return;
+        }
+
+        if (current) {
           const data = await res.json();
           setContracts(data);
         }
       } catch (e) {
+        if (current) setContracts([]);
         console.error("Failed to fetch contracts", e);
       } finally {
         if (current) setLoading(false);
@@ -104,21 +118,29 @@ export function ContractList({ refreshTrigger }: ContractListProps) {
                   <div className="flex justify-end gap-2 text-zinc-400">
                     {contract.fileUrl && (
                       <a 
-                        href={contract.fileUrl.startsWith('http') 
-                          ? contract.fileUrl 
-                          : `${window.location.origin.replace(':3000', ':3001')}${contract.fileUrl}`} 
+                        href={`${window.location.origin.replace(':3000', ':3001')}/api/contracts/download/${contract.id}`}
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="p-1.5 rounded-lg hover:bg-primary/10 hover:text-primary transition-all active:scale-95 flex items-center gap-1"
-                        title={contract.originalFileName}
+                        title={`${contract.originalFileName} 다운로드`}
                       >
                         <span className="material-symbols-outlined text-sm">description</span>
                       </a>
                     )}
-                    <button className="p-1.5 rounded-lg hover:bg-surface-container-highest transition-colors hover:text-primary active:scale-95">
+                    <button 
+                      disabled 
+                      aria-disabled="true"
+                      title="수정 기능은 준비 중입니다."
+                      className="p-1.5 rounded-lg text-zinc-600 cursor-not-allowed opacity-50"
+                    >
                       <span className="material-symbols-outlined text-sm">edit</span>
                     </button>
-                    <button className="p-1.5 rounded-lg hover:bg-surface-container-highest transition-colors hover:text-error active:scale-95">
+                    <button 
+                      disabled 
+                      aria-disabled="true"
+                      title="삭제 기능은 준비 중입니다."
+                      className="p-1.5 rounded-lg text-zinc-600 cursor-not-allowed opacity-50"
+                    >
                       <span className="material-symbols-outlined text-sm">delete</span>
                     </button>
                   </div>

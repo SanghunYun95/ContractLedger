@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
 interface User {
@@ -26,21 +26,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const isTokenExpired = (token: string) => {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload.exp * 1000 < Date.now();
+    } catch (e) {
+      return true;
+    }
+  };
+
   useEffect(() => {
-    // Load auth info from localStorage on mount
+    // 마운트 시 localStorage에서 인증 정보 로드
     const savedToken = localStorage.getItem("auth_token");
     const savedUser = localStorage.getItem("auth_user");
 
     if (savedToken && savedUser) {
-      try {
-        setToken(savedToken);
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error("Failed to parse saved user", e);
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("auth_user");
-        setToken(null);
-        setUser(null);
+      if (isTokenExpired(savedToken)) {
+        console.warn("인증 토큰이 만료되었습니다.");
+        logout();
+      } else {
+        try {
+          setToken(savedToken);
+          setUser(JSON.parse(savedUser));
+        } catch (e) {
+          console.error("저장된 사용자 정보 파싱 실패", e);
+          logout();
+        }
       }
     }
     setIsLoading(false);
@@ -76,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/login");
   };
 
-  // Redirect to login if not authenticated (except for /login page)
+  // 인증되지 않은 경우 로그인 페이지로 리다이렉트 (로그인 페이지 제외)
   useEffect(() => {
     if (!isLoading && !token && pathname !== "/login") {
       router.push("/login");
