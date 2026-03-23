@@ -54,7 +54,12 @@ export function ContractList({ refreshTrigger }: ContractListProps) {
 
         if (current) {
           const data = await res.json();
-          setContracts(data);
+          if (Array.isArray(data)) {
+            setContracts(data);
+          } else {
+            console.error("Unexpected API response format:", data);
+            setContracts([]);
+          }
         }
       } catch (e) {
         if (current) setContracts([]);
