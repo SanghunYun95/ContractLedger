@@ -20,6 +20,12 @@ export class Contract {
   @Column({ default: 'DRAFT' })
   status: string; // DRAFT, PENDING, SIGNED, EXPIRED
 
+  @Column({ type: 'int', nullable: true })
+  riskScore: number;
+
+  @Column({ type: 'text', nullable: true })
+  riskAnalysis: string;
+
   @Index()
   @Column()
   tenantId: string;

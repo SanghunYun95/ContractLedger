@@ -15,6 +15,7 @@ interface AuthContextType {
   login: (email: string, pass: string, tenantId: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
+  refreshToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,36 +27,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const isTokenExpired = (token: string) => {
+  const isTokenExpired = (t: string) => {
     try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
+      const payload = JSON.parse(atob(t.split(".")[1]));
       return payload.exp * 1000 < Date.now();
     } catch (e) {
       return true;
     }
   };
 
+  const refreshToken = useCallback(async () => {
+    const rt = localStorage.getItem("refresh_token");
+    if (!rt) return null;
+
+    try {
+      const res = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: rt }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setToken(data.access_token);
+        localStorage.setItem("auth_token", data.access_token);
+        return data.access_token;
+      } else {
+        logout();
+        return null;
+      }
+    } catch (e) {
+      logout();
+      return null;
+    }
+  }, []);
+
   useEffect(() => {
-    // 마운트 시 localStorage에서 인증 정보 로드
     const savedToken = localStorage.getItem("auth_token");
     const savedUser = localStorage.getItem("auth_user");
 
     if (savedToken && savedUser) {
       if (isTokenExpired(savedToken)) {
-        console.warn("인증 토큰이 만료되었습니다.");
-        logout();
+        // Access Token 만료 시 즉시 리프레시 시도
+        refreshToken();
       } else {
         try {
           setToken(savedToken);
           setUser(JSON.parse(savedUser));
         } catch (e) {
-          console.error("저장된 사용자 정보 파싱 실패", e);
           logout();
         }
       }
     }
     setIsLoading(false);
-  }, []);
+  }, [refreshToken]);
 
   const login = async (email: string, pass: string, tenantId: string) => {
     const res = await fetch("/api/auth/login", {
@@ -74,20 +99,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(data.user);
 
     localStorage.setItem("auth_token", data.access_token);
+    localStorage.setItem("refresh_token", data.refresh_token);
     localStorage.setItem("auth_user", JSON.stringify(data.user));
 
     router.push("/");
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setToken(null);
     setUser(null);
     localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
     localStorage.removeItem("auth_user");
     router.push("/login");
-  };
+  }, [router]);
 
-  // 인증되지 않은 경우 로그인 페이지로 리다이렉트 (로그인 페이지 제외)
   useEffect(() => {
     if (!isLoading && !token && pathname !== "/login") {
       router.push("/login");
@@ -95,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [isLoading, token, pathname, router]);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isLoading, refreshToken }}>
       {children}
     </AuthContext.Provider>
   );

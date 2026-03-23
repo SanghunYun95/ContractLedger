@@ -2,10 +2,18 @@
 
 import React, { useState } from "react";
 import { useTenant } from "@/context/TenantContext";
+import { usePathname } from "next/navigation";
 
 export function TopAppBar() {
   const [tenantOpen, setTenantOpen] = useState(false);
   const { activeTenant, setActiveTenant, availableTenants } = useTenant();
+  const pathname = usePathname();
+
+  const getBreadcrumb = () => {
+    if (pathname.includes('/contracts')) return "계약 관리 / 목록";
+    if (pathname.includes('/dashboard')) return "대시보드 / 최근 활동";
+    return "대시보드 / 일반";
+  };
 
   return (
     <header className="flex justify-between items-center w-full px-8 py-4 bg-zinc-950/70 backdrop-blur-xl font-headline tracking-tight shadow-[0_40px_40px_rgba(249,245,248,0.04)] sticky top-0 z-50">
@@ -39,22 +47,22 @@ export function TopAppBar() {
         </div>
 
         <div className="h-6 w-[1px] bg-outline-variant/20"></div>
-        <div className="text-zinc-400 text-sm">Dashboard / <span className="text-on-surface font-semibold">Audit Logs</span></div>
+        <div className="text-zinc-400 text-sm">{getBreadcrumb()}</div>
       </div>
 
       <div className="flex items-center gap-4">
         <div className="flex gap-2 mr-4">
-          <button className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800/50 transition-colors">
+          <button className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800/50 transition-colors tooltip" data-tip="알림">
             <span className="material-symbols-outlined">notifications</span>
           </button>
-          <button className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800/50 transition-colors">
+          <button className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800/50 transition-colors tooltip" data-tip="설정">
             <span className="material-symbols-outlined">settings</span>
           </button>
         </div>
         <div className="flex items-center gap-3 pl-4 border-l border-outline-variant/20">
           <div className="text-right">
             <div className="text-xs font-bold text-on-surface">Alex Rivera</div>
-            <div className="text-[10px] text-zinc-500 uppercase tracking-widest">Administrator</div>
+            <div className="text-[10px] text-zinc-500 uppercase tracking-widest">시스템 관리자</div>
           </div>
           <img 
             alt="User Profile" 

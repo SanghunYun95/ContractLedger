@@ -24,6 +24,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.19.0",
     "@nestjs/cli": "^11.0.16",
     "@nestjs/common": "^11.1.17",
     "@nestjs/core": "^11.1.17",

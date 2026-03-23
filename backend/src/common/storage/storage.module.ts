@@ -1,13 +1,13 @@
 import { Module, Global } from '@nestjs/common';
 import { StorageService } from '../services/storage.service';
-import { DiskStorageService } from '../services/disk-storage.service';
+import { GcsStorageService } from '../services/gcs-storage.service';
 
 @Global()
 @Module({
   providers: [
     {
       provide: StorageService,
-      useClass: DiskStorageService,
+      useClass: GcsStorageService,
     },
   ],
   exports: [StorageService],
