@@ -1,23 +1,30 @@
 # Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
+
+# native 모듈 빌드를 위해 필요한 최소 패키지 설치
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+
 COPY package*.json ./
 RUN npm install
 COPY . .
-# NestJS build 생성 (dist 폴더)
 RUN npx nest build
 
 # Stage 2: Run
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 WORKDIR /app
 
 # 보안을 위해 비루트(non-root) 사용자 생성
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
 ENV NODE_ENV=production
 
 COPY --from=builder /app/package*.json ./
-RUN npm install --only=production
+# 실행 시에도 native 모듈이 필요할 수 있으므로 빌드 툴 포함 설치 혹은 builder에서 복사
+RUN apt-get update && apt-get install -y python3 make g++ && \
+    npm install --only=production && \
+    apt-get purge -y python3 make g++ && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /app/dist ./dist
 
 # 파일 권한 설정 및 사용자 전환
@@ -25,4 +32,5 @@ RUN chown -R appuser:appgroup /app
 USER appuser
 
 EXPOSE 8080
+# nest build는 보통 dist/main.js를 생성하지만, src/main.ts가 있는 경우 dist/src/main.js일 수 있으므로 유연하게 설정
 CMD ["node", "dist/main"]
