@@ -35,6 +35,10 @@ ContractLedger is designed to be a core backend module for managing contracts ef
    ```
 
 3. Set up your `.env` file for database configuration and application settings.
+   
+#### Required Environment Variables
+- `JWT_SECRET`: (Backend) Required for authentication.
+- `NEXT_PUBLIC_API_URL`: (Frontend) Base URL for the backend API (e.g., `http://localhost:3001`). Required for file downloads and API calls.
 
 ### Running the Application
 

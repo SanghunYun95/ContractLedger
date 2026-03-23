@@ -18,7 +18,8 @@ interface ContractListProps {
   refreshTrigger?: number;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+const toApiUrl = (path: string) => `${API_BASE_URL}${path}`;
 
 export function ContractList({ refreshTrigger }: ContractListProps) {
   const { activeTenant } = useTenant();
@@ -29,7 +30,7 @@ export function ContractList({ refreshTrigger }: ContractListProps) {
   useEffect(() => {
     let current = true;
     const fetchContracts = async () => {
-      if (!token) {
+      if (!token || !activeTenant?.id) {
         if (current) {
           setContracts([]);
           setLoading(false);
@@ -39,7 +40,7 @@ export function ContractList({ refreshTrigger }: ContractListProps) {
 
       setLoading(true);
       try {
-        const res = await fetch(`${API_BASE_URL}/api/contracts`, {
+        const res = await fetch(toApiUrl("/api/contracts"), {
           headers: {
             "x-tenant-id": activeTenant.id,
             "Authorization": `Bearer ${token}`
@@ -124,7 +125,7 @@ export function ContractList({ refreshTrigger }: ContractListProps) {
                   <div className="flex justify-end gap-2 text-zinc-400">
                     {contract.fileUrl && (
                       <a 
-                        href={`${API_BASE_URL}/api/contracts/download/${contract.id}`}
+                        href={toApiUrl(`/api/contracts/download/${contract.id}`)}
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="p-1.5 rounded-lg hover:bg-primary/10 hover:text-primary transition-all active:scale-95 flex items-center gap-1"
