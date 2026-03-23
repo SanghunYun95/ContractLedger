@@ -24,5 +24,5 @@ COPY --from=builder /app/dist ./dist
 RUN chown -R appuser:appgroup /app
 USER appuser
 
-EXPOSE 3001
+EXPOSE 8080
 CMD ["node", "dist/main"]
