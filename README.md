@@ -37,14 +37,14 @@ ContractLedger는 B2B SaaS 환경에서 계약서를 효율적이고 안전하�
 
 - **Frontend**: Next.js 15+, React 19, Tailwind CSS
 - **Backend**: Node.js, TypeScript, Nest.js, TypeORM
-- **Database**: MySQL (운영), SQLite (개발/테스트)
+- **Database**: SQLite (기본)
 - **Infrastructure**: Google Cloud Platform (Cloud Run, Cloud Storage, Artifact Registry)
 
 ## 📦 시작하기
 
 ### 사전 준비 사항
 - Node.js >= 18
-- MySQL DB (혹은 SQLite 사용 설정 가능)
+- SQLite (기본 내장)
 - GCP 계정 및 프로젝트 (배포 시 필요)
 
 ### 설치 및 실행
@@ -55,12 +55,12 @@ ContractLedger는 B2B SaaS 환경에서 계약서를 효율적이고 안전하�
    cd ContractLedger
    ```
 
-2. 백엔드 및 프론트엔드 의존성 설치:
+2. 백엔드 및 프론트엔드 의존성 설치 (프로젝트 루트 기준):
    ```bash
-   # Backend
+   # Backend 의존성 설치
    cd backend && npm install
    
-   # Frontend
+   # Frontend 의존성 설치 (루트 폴더로 돌아가서 이동하거나 전 단계에서 바로 이동)
    cd ../frontend && npm install
    ```
 

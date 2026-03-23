@@ -24,5 +24,5 @@ COPY --from=builder /app/.next/static ./.next/static
 RUN chown -R appuser:appgroup /app
 USER appuser
 
-EXPOSE 3000
+EXPOSE 8080
 CMD ["node", "server.js"]

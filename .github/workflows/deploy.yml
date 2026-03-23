@@ -53,6 +53,10 @@ jobs:
           region: ${{ env.REGION }}
           env_vars: |
             NODE_ENV=production
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            GCS_PROJECT_ID=${{ env.PROJECT_ID }}
+            GCS_BUCKET_NAME=contract-ledger-files
+            SYNC_DB=true
 
       # Deploy Frontend to Cloud Run
       - name: Deploy Frontend

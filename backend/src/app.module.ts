@@ -30,7 +30,7 @@ import { StorageModule } from './common/storage/storage.module';
       type: 'sqlite',
       database: 'database.sqlite',
       entities: [Tenant, User, AuditLog, Contract],
-      synchronize: process.env.NODE_ENV === 'development', // 개발 환경에서만 동기화 활성화
+      synchronize: process.env.NODE_ENV === 'development' || process.env.SYNC_DB === 'true', // 개발 및 초기 배포 단계에서 테이블 자동 동기화 활성화
     }),
     TypeOrmModule.forFeature([Tenant, User, AuditLog]),
     EventEmitterModule.forRoot(),
