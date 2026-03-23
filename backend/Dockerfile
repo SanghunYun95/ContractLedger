@@ -32,5 +32,5 @@ RUN chown -R appuser:appgroup /app
 USER appuser
 
 EXPOSE 8080
-# nest build는 보통 dist/main.js를 생성하지만, src/main.ts가 있는 경우 dist/src/main.js일 수 있으므로 유연하게 설정
-CMD ["node", "dist/main"]
+# 앱 실행 경로를 명시적으로 지정하고, 실패 시 상세 원인을 출력하도록 개선
+CMD ["sh", "-c", "if [ -f dist/src/main.js ]; then node dist/src/main.js; elif [ -f dist/main.js ]; then node dist/main.js; else echo 'Error: main.js not found in expected locations'; ls -R dist; exit 1; fi"]
