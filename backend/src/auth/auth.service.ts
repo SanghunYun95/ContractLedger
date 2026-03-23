@@ -32,14 +32,53 @@ export class AuthService {
     }
 
     const payload = { sub: user.id, email: user.email, tenantId: user.tenantId };
+    
+    // Generate Access & Refresh Tokens
+    const access_token = this.jwtService.sign(payload, { expiresIn: '15m' });
+    const refresh_token = this.jwtService.sign(payload, { expiresIn: '30d' });
+
+    // Store hashed refresh token in DB
+    const hashedRefreshToken = await bcrypt.hash(refresh_token, 10);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    await this.userRepository.update(user.id, {
+      refreshToken: hashedRefreshToken,
+      refreshTokenExpiresAt: expiresAt,
+    });
+
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token,
+      refresh_token,
       user: {
         id: user.id,
         email: user.email,
         tenantId: user.tenantId,
       },
     };
+  }
+
+  async refresh(refreshToken: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken);
+      const user = await this.userRepository.findOne({ where: { id: payload.sub } });
+
+      if (!user || !user.refreshToken || !user.refreshTokenExpiresAt || user.refreshTokenExpiresAt < new Date()) {
+        throw new UnauthorizedException('Invalid or expired refresh token');
+      }
+
+      const isMatch = await bcrypt.compare(refreshToken, user.refreshToken);
+      if (!isMatch) {
+        throw new UnauthorizedException('Token mismatch');
+      }
+
+      const newPayload = { sub: user.id, email: user.email, tenantId: user.tenantId };
+      return {
+        access_token: this.jwtService.sign(newPayload, { expiresIn: '15m' }),
+      };
+    } catch (e) {
+      throw new UnauthorizedException('Token validation failed');
+    }
   }
 
   // For testing/seeding: Hash password

@@ -1,0 +1,5 @@
+{
+  "email": "admin@acme.com",
+  "password": "password123",
+  "tenantId": "tenant-a"
+}

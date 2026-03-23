@@ -11,3 +11,4 @@ database.sqlite
 uploads/
 /backend/database.sqlite
 /backend/uploads/
+cloud-storage.json

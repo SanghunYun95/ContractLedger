@@ -57,4 +57,12 @@ export class DiskStorageService extends StorageService {
       fs.unlinkSync(fullPath);
     }
   }
+
+  async getFileStream(fileName: string): Promise<any> {
+    const filePath = this.resolveWithinUploadRoot(fileName);
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`File not found at ${filePath}`);
+    }
+    return fs.createReadStream(filePath);
+  }
 }
