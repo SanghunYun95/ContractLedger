@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useTenant } from "@/context/TenantContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface AuditLog {
   id: string;
@@ -44,18 +45,23 @@ interface AuditTableProps {
 
 export function AuditTable({ refreshTrigger }: AuditTableProps) {
   const { activeTenant } = useTenant();
+  const { token } = useAuth();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let current = true;
     const fetchLogs = async () => {
+      if (!token) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       try {
         const res = await fetch("/api/audit/logs", {
           headers: {
             "x-tenant-id": activeTenant.id,
-            "Authorization": "Bearer demo-token-123"
+            "Authorization": `Bearer ${token}`
           }
         });
         if (res.ok && current) {
@@ -73,14 +79,13 @@ export function AuditTable({ refreshTrigger }: AuditTableProps) {
 
     fetchLogs();
 
-    // Re-fetch occasionally or relying on the user to switch tenant to re-fetch
     const interval = setInterval(fetchLogs, 5000);
 
     return () => {
       current = false;
       clearInterval(interval);
     };
-  }, [activeTenant, refreshTrigger]);
+  }, [activeTenant, refreshTrigger, token]);
 
   return (
     <div className="glass-card rounded-2xl border border-outline-variant/5 overflow-hidden">

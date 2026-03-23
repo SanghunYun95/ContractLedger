@@ -1,8 +1,13 @@
 node_modules/
 dist/
 *.log
+/backend/login.json
 .env
 .vscode/
 .DS_Store
 coverage/
 coderabbit_comment.txt
+database.sqlite
+uploads/
+/backend/database.sqlite
+/backend/uploads/

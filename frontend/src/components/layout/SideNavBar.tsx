@@ -1,6 +1,8 @@
-import React from "react";
+import { useAuth } from "@/context/AuthContext";
 
 export function SideNavBar() {
+  const { logout } = useAuth();
+
   return (
     <aside className="flex flex-col h-full sticky left-0 top-0 overflow-y-auto bg-zinc-950 h-screen w-64 border-r border-zinc-800/15 font-headline text-sm font-medium duration-300 ease-in-out shrink-0">
       <div className="px-8 py-10">
@@ -9,11 +11,11 @@ export function SideNavBar() {
       </div>
       
       <nav className="flex-1 px-4 space-y-1">
-        <a className="flex items-center gap-3 text-indigo-400 bg-indigo-500/10 border-r-2 border-indigo-500 px-4 py-3 transition-all" href="#">
+        <a className="flex items-center gap-3 text-indigo-400 bg-indigo-500/10 border-r-2 border-indigo-500 px-4 py-3 transition-all" href="/">
           <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>dashboard</span>
           <span>Dashboard</span>
         </a>
-        <a className="flex items-center gap-3 text-zinc-500 px-4 py-3 hover:text-zinc-200 hover:bg-zinc-900/50 transition-all" href="#">
+        <a className="flex items-center gap-3 text-zinc-500 px-4 py-3 hover:text-zinc-200 hover:bg-zinc-900/50 transition-all" href="/contracts">
           <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>description</span>
           <span>Contracts</span>
         </a>
@@ -40,12 +42,16 @@ export function SideNavBar() {
             <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>help</span>
             <span>Support</span>
           </a>
-          <a className="flex items-center gap-3 text-zinc-500 px-2 py-2 hover:text-zinc-200 transition-colors" href="#">
+          <button 
+            onClick={() => logout()}
+            className="w-full flex items-center gap-3 text-zinc-500 px-2 py-2 hover:text-zinc-200 transition-colors"
+          >
             <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>logout</span>
             <span>Sign Out</span>
-          </a>
+          </button>
         </div>
       </div>
     </aside>
   );
 }
+

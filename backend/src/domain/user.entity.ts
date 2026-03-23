@@ -9,6 +9,9 @@ export class User {
   @Column()
   email: string;
 
+  @Column({ nullable: true }) // 기존 유저 대응을 위해 임시로 nullable 허용
+  password?: string;
+
   @Index()
   @Column()
   tenantId: string;
