@@ -52,7 +52,10 @@ export function AuditTable({ refreshTrigger }: AuditTableProps) {
   useEffect(() => {
     let current = true;
     const fetchLogs = async () => {
-      if (!token) return;
+      if (!token) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       try {
         const res = await fetch("/api/audit/logs", {

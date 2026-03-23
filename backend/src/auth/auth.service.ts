@@ -13,8 +13,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, pass: string): Promise<any> {
-    const user = await this.userRepository.findOne({ where: { email } });
+  async validateUser(email: string, pass: string, tenantId: string): Promise<any> {
+    const user = await this.userRepository.findOne({ where: { email, tenantId } });
     if (user && user.password) {
       const isMatch = await bcrypt.compare(pass, user.password);
       if (isMatch) {
@@ -25,8 +25,8 @@ export class AuthService {
     return null;
   }
 
-  async login(email: string, pass: string) {
-    const user = await this.validateUser(email, pass);
+  async login(email: string, pass: string, tenantId: string) {
+    const user = await this.validateUser(email, pass, tenantId);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }

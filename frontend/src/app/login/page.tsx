@@ -4,8 +4,9 @@ import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@acme.com");
+  const [password, setPassword] = useState("password123");
+  const [tenantId, setTenantId] = useState("tenant-a");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -15,7 +16,7 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
+      await login(email, password, tenantId);
     } catch (err: any) {
       setError(err.message || "Failed to login");
     } finally {
@@ -55,6 +56,17 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="••••••••"
+                className="w-full bg-surface-container-high rounded-xl px-4 py-3.5 text-on-surface border border-outline-variant/5 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-all"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-label text-zinc-500 ml-1">Tenant ID</label>
+              <input
+                type="text"
+                value={tenantId}
+                onChange={(e) => setTenantId(e.target.value)}
+                required
+                placeholder="tenant-a"
                 className="w-full bg-surface-container-high rounded-xl px-4 py-3.5 text-on-surface border border-outline-variant/5 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-all"
               />
             </div>

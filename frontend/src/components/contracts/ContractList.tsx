@@ -104,7 +104,9 @@ export function ContractList({ refreshTrigger }: ContractListProps) {
                   <div className="flex justify-end gap-2 text-zinc-400">
                     {contract.fileUrl && (
                       <a 
-                        href={`http://localhost:3001${contract.fileUrl}`} 
+                        href={contract.fileUrl.startsWith('http') 
+                          ? contract.fileUrl 
+                          : `${window.location.origin.replace(':3000', ':3001')}${contract.fileUrl}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="p-1.5 rounded-lg hover:bg-primary/10 hover:text-primary transition-all active:scale-95 flex items-center gap-1"

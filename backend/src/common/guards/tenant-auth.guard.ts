@@ -23,10 +23,14 @@ export class TenantAuthGuard implements CanActivate {
       // Inject identifying info into request
       request.user = payload;
       
-      // FOR DEMO/SIMULATION: Prioritize x-tenant-id header to allow UI switching.
-      // In production, you should ALWAYS use the tenantId from the validated JWT payload
-      // to prevent cross-tenant data leakage.
-      request.tenantId = (typeof tenantIdFromHeader === 'string' ? tenantIdFromHeader.trim() : null) || payload.tenantId;
+      const requestedTenantId =
+        typeof tenantIdFromHeader === 'string' ? tenantIdFromHeader.trim() : undefined;
+      
+      if (requestedTenantId && requestedTenantId !== payload.tenantId) {
+        throw new ForbiddenException('Cross-tenant access denied');
+      }
+      
+      request.tenantId = payload.tenantId;
 
       if (!request.tenantId) {
         throw new ForbiddenException('Tenant context missing');
@@ -34,6 +38,9 @@ export class TenantAuthGuard implements CanActivate {
 
       return true;
     } catch (e) {
+      if (e instanceof ForbiddenException) {
+        throw e;
+      }
       throw new UnauthorizedException('Invalid or expired token');
     }
   }

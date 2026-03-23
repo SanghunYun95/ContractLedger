@@ -21,27 +21,36 @@ export class ContractService {
       tenantId,
     });
 
+    let uploadedUrl: string | undefined;
     if (file) {
       const { url, fileName } = await this.storageService.uploadFile(file, tenantId);
+      uploadedUrl = url;
       contract.fileUrl = url;
       contract.originalFileName = fileName;
     }
 
-    const saved = await this.contractRepository.save(contract);
-    
-    // Emit audit log event
-    this.eventEmitter.emit('audit.log.created', {
-      tenantId,
-      userId: 'system', // TODO: Get from request
-      action: 'CREATE_CONTRACT',
-      resourceId: saved.id,
-      details: { 
-        title: saved.title,
-        hasFile: !!file 
-      },
-    });
+    try {
+      const saved = await this.contractRepository.save(contract);
+      
+      // Emit audit log event
+      this.eventEmitter.emit('audit.log.created', {
+        tenantId,
+        userId: 'system', // TODO: Get from request
+        action: 'CREATE_CONTRACT',
+        resourceId: saved.id,
+        details: { 
+          title: saved.title,
+          hasFile: !!file 
+        },
+      });
 
-    return saved;
+      return saved;
+    } catch (error) {
+      if (uploadedUrl) {
+        await this.storageService.deleteFile(uploadedUrl).catch(() => undefined);
+      }
+      throw error;
+    }
   }
 
   async findAll(tenantId: string): Promise<Contract[]> {
@@ -63,7 +72,12 @@ export class ContractService {
 
   async update(id: string, updateData: Partial<Contract>, tenantId: string): Promise<Contract> {
     const contract = await this.findOne(id, tenantId);
-    Object.assign(contract, updateData);
+    
+    // Whitelist editable fields to prevent overwriting protected fields like tenantId
+    if (updateData.title !== undefined) contract.title = updateData.title;
+    if (updateData.content !== undefined) contract.content = updateData.content;
+    if (updateData.status !== undefined) contract.status = updateData.status;
+
     const updated = await this.contractRepository.save(contract);
 
     this.eventEmitter.emit('CONTRACT_UPDATED', {
@@ -78,6 +92,13 @@ export class ContractService {
 
   async remove(id: string, tenantId: string): Promise<void> {
     const contract = await this.findOne(id, tenantId);
+    
+    if (contract.fileUrl) {
+      await this.storageService.deleteFile(contract.fileUrl).catch(err => {
+        console.error(`Failed to delete file ${contract.fileUrl}:`, err);
+      });
+    }
+
     await this.contractRepository.remove(contract);
 
     this.eventEmitter.emit('CONTRACT_DELETED', {

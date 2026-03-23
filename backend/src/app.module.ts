@@ -22,7 +22,7 @@ import { DiskStorageService } from './common/services/disk-storage.service';
   imports: [
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET || 'super-secret-key-12345',
+      secret: process.env.JWT_SECRET || 'dev-secret-key', // Use fallback only for dev if needed, or remove completely
       signOptions: { expiresIn: '1d' },
     }),
     ServeStaticModule.forRoot({

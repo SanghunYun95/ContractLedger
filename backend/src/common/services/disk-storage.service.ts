@@ -14,14 +14,26 @@ export class DiskStorageService extends StorageService {
     }
   }
 
+  private resolveWithinUploadRoot(...segments: string[]) {
+    const target = path.resolve(this.uploadRoot, ...segments);
+    const root = `${this.uploadRoot}${path.sep}`;
+    if (!target.startsWith(root) && target !== this.uploadRoot) {
+      throw new Error('Invalid storage path');
+    }
+    return target;
+  }
+
   async uploadFile(file: any, tenantId: string): Promise<{ url: string; fileName: string }> {
-    const tenantDir = path.join(this.uploadRoot, tenantId);
+    const safeTenantId = tenantId.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const safeOriginalName = path.basename(file.originalname);
+    
+    const tenantDir = this.resolveWithinUploadRoot(safeTenantId);
     if (!fs.existsSync(tenantDir)) {
       fs.mkdirSync(tenantDir, { recursive: true });
     }
 
-    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.originalname}`;
-    const filePath = path.join(tenantDir, uniqueName);
+    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${safeOriginalName}`;
+    const filePath = this.resolveWithinUploadRoot(safeTenantId, uniqueName);
 
     // If it's a buffer or DiskStorage already handled it by multer
     if (file.path) {
@@ -33,14 +45,14 @@ export class DiskStorageService extends StorageService {
 
     // Return a relative URL that we can serve via static files
     return {
-      url: `/uploads/${tenantId}/${uniqueName}`,
-      fileName: file.originalname
+      url: `/uploads/${safeTenantId}/${uniqueName}`,
+      fileName: safeOriginalName
     };
   }
 
   async deleteFile(url: string): Promise<void> {
-    const relativePath = url.startsWith('/') ? url.slice(1) : url;
-    const fullPath = path.resolve(process.cwd(), relativePath);
+    const relativePath = url.replace(/^\/?uploads\//, '');
+    const fullPath = this.resolveWithinUploadRoot(relativePath);
     if (fs.existsSync(fullPath)) {
       fs.unlinkSync(fullPath);
     }

@@ -5,6 +5,10 @@ import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 async function bootstrap() {
+  if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable is not set');
+  }
+  
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalFilters(new GlobalExceptionFilter());

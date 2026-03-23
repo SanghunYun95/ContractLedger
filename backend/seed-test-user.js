@@ -23,6 +23,9 @@ async function seed() {
   `);
   
   const tenants = await queryRunner.query(`SELECT id FROM tenants WHERE name = 'Acme Corp'`);
+  if (!tenants || tenants.length === 0) {
+    throw new Error('Tenant Acme Corp not found. Ensure the INSERT executed correctly.');
+  }
   const tenantId = tenants[0].id;
   console.log('Tenant ID:', tenantId);
 

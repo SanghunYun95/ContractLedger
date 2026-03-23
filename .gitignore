@@ -1,6 +1,7 @@
 node_modules/
 dist/
 *.log
+/backend/login.json
 .env
 .vscode/
 .DS_Store

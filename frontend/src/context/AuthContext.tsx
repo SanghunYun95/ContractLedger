@@ -12,7 +12,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string, pass: string) => Promise<void>;
+  login: (email: string, pass: string, tenantId: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -32,17 +32,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const savedUser = localStorage.getItem("auth_user");
 
     if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+      try {
+        setToken(savedToken);
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error("Failed to parse saved user", e);
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("auth_user");
+        setToken(null);
+        setUser(null);
+      }
     }
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, pass: string) => {
+  const login = async (email: string, pass: string, tenantId: string) => {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password: pass }),
+      body: JSON.stringify({ email, password: pass, tenantId }),
     });
 
     if (!res.ok) {

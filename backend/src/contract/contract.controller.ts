@@ -12,10 +12,6 @@ export class ContractController {
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   create(@Req() req: any, @Body() createDto: any, @UploadedFile() file?: any) {
-    console.log('--- CONTRACT CREATE DEBUG ---');
-    console.log('Tenant ID:', req.tenantId);
-    console.log('Body:', createDto);
-    console.log('File:', file ? file.originalname : 'No file');
     return this.contractService.create(req.tenantId, createDto, file);
   }
 
