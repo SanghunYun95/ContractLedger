@@ -18,11 +18,12 @@ describe('TenantAuthGuard', () => {
       switchToHttp: () => ({
         getRequest: () => ({
           headers: {},
+          query: {},
         }),
       }),
     } as ExecutionContext;
 
-    await expect(guard.canActivate(mockContext)).rejects.toThrow(UnauthorizedException);
+    await expect(guard.canActivate(mockContext)).rejects.toThrow('Invalid or missing authorization header or token');
   });
 
   it('should throw UnauthorizedException if token is invalid', async () => {
@@ -32,13 +33,14 @@ describe('TenantAuthGuard', () => {
           headers: {
             authorization: 'Bearer invalid-token',
           },
+          query: {},
         }),
       }),
     } as ExecutionContext;
 
     (jwtService.verifyAsync as jest.Mock).mockRejectedValue(new Error('Invalid token'));
 
-    await expect(guard.canActivate(mockContext)).rejects.toThrow(UnauthorizedException);
+    await expect(guard.canActivate(mockContext)).rejects.toThrow('Invalid or expired token');
   });
 
   it('should return true and inject context if token is valid', async () => {
@@ -47,6 +49,7 @@ describe('TenantAuthGuard', () => {
         authorization: 'Bearer valid-token',
         'x-tenant-id': 'header-tenant-id',
       },
+      query: {},
     } as any;
     const mockContext = {
       switchToHttp: () => ({
@@ -62,16 +65,16 @@ describe('TenantAuthGuard', () => {
     const result = await guard.canActivate(mockContext);
 
     expect(result).toBe(true);
-    expect(mockRequest.tenantId).toBe('tenant-123'); // From payload
+    expect(mockRequest.tenantId).toBe('header-tenant-id'); // Header takes precedence in latest logic
     expect(mockRequest.user.sub).toBe('user-123');
   });
 
-  it('should fallback to header tenantId if payload missing tenantId', async () => {
+  it('should fallback to payload tenantId if header missing tenantId', async () => {
     const mockRequest = {
       headers: {
         authorization: 'Bearer valid-token',
-        'x-tenant-id': 'header-tenant-id',
       },
+      query: {},
     } as any;
     const mockContext = {
       switchToHttp: () => ({
@@ -81,11 +84,12 @@ describe('TenantAuthGuard', () => {
 
     (jwtService.verifyAsync as jest.Mock).mockResolvedValue({
       sub: 'user-123',
+      tenantId: 'payload-tenant-id',
     });
 
     const result = await guard.canActivate(mockContext);
 
     expect(result).toBe(true);
-    expect(mockRequest.tenantId).toBe('header-tenant-id');
+    expect(mockRequest.tenantId).toBe('payload-tenant-id');
   });
 });

@@ -39,7 +39,7 @@ describe('NotificationService', () => {
     const result = await service.processWebhook(payload);
 
     expect(result.success).toBe(true);
-    expect(result.message).toBe('Notification received and audit log queued');
+    expect(result.message).toBe('Processed risk detection; audit log recorded.');
     expect(sendSpy).toHaveBeenCalledWith('tenant-123', payload);
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('audit.log.created', expect.any(Object));
   });
