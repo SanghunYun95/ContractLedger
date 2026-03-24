@@ -52,9 +52,14 @@ export class GcsStorageService extends StorageService {
         url: `/api/contracts/download/${fileName}`, 
         fileName: file.originalname,
       };
-    } catch (e: any) {
-      this.logger.error(`[GcsStorage] Failed to upload file to ${this.bucketName}: ${e.message}`);
-      throw new Error(`Cloud Storage upload failed: ${e.message}`);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      const stack = e instanceof Error ? e.stack : undefined;
+      this.logger.error(
+        `[GcsStorage] Failed to upload file to ${this.bucketName}: ${message}`,
+        stack,
+      );
+      throw new Error(`Cloud Storage upload failed: ${message}`);
     }
   }
 
