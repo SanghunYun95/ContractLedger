@@ -50,7 +50,7 @@ jobs:
             GCS_PROJECT_ID=${{ env.PROJECT_ID }}
             GCS_BUCKET_NAME=contract-ledger-files
             SYNC_DB=true
-            CORS_ORIGIN=https://frontend-1007750315482.asia-northeast3.run.app
+            CORS_ORIGIN=https://frontend-1007750315482.asia-northeast3.run.app,https://vigilant-shift-490601-t5.web.app,https://vigilant-shift-490601-t5.firebaseapp.app
 
       - name: Build and Push Frontend
         run: |
@@ -70,3 +70,7 @@ jobs:
           env_vars: |
             NODE_ENV=production
             NEXT_PUBLIC_API_URL=${{ steps.deploy_backend.outputs.url }}
+
+      - name: Deploy to Firebase Hosting
+        run: |
+          npx firebase-tools deploy --only hosting --non-interactive --project ${{ env.PROJECT_ID }}
