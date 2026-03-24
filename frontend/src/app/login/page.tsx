@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("admin@acme.com");
+  const [email, setEmail] = useState("test@example.com");
   const [password, setPassword] = useState("password123");
-  const [tenantId, setTenantId] = useState("tenant-a");
+  const [tenantId, setTenantId] = useState("test-tenant");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -44,7 +44,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="admin@acme.com"
+                placeholder="test@example.com"
                 className="w-full bg-surface-container-high rounded-xl px-4 py-3.5 text-on-surface border border-outline-variant/5 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-all"
               />
             </div>
@@ -66,7 +66,7 @@ export default function LoginPage() {
                 value={tenantId}
                 onChange={(e) => setTenantId(e.target.value)}
                 required
-                placeholder="tenant-a"
+                placeholder="test-tenant"
                 className="w-full bg-surface-container-high rounded-xl px-4 py-3.5 text-on-surface border border-outline-variant/5 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-all"
               />
             </div>
