@@ -7,7 +7,7 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  REGION: asia-northeast3 # 서울 리전
+  REGION: asia-northeast3
   GAR_LOCATION: asia-northeast3-docker.pkg.dev
   REPOSITORY: contract-ledger
   BACKEND_IMAGE: backend
@@ -31,13 +31,11 @@ jobs:
       - name: Authorize Docker
         run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}
 
-      # 1. Backend Build & Push
       - name: Build and Push Backend
         run: |
           docker build -t ${{ env.GAR_LOCATION }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }} ./backend
           docker push ${{ env.GAR_LOCATION }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }}
 
-      # 2. Deploy Backend to Cloud Run
       - name: Deploy Backend
         id: deploy_backend
         uses: google-github-actions/deploy-cloudrun@v2
@@ -54,7 +52,6 @@ jobs:
             SYNC_DB=true
             CORS_ORIGIN=https://frontend-1007750315482.asia-northeast3.run.app
 
-      # 3. Frontend Build & Push (Inject Backend URL as Build Arg)
       - name: Build and Push Frontend
         run: |
           docker build \
@@ -63,7 +60,6 @@ jobs:
             ./frontend
           docker push ${{ env.GAR_LOCATION }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
 
-      # 4. Deploy Frontend to Cloud Run
       - name: Deploy Frontend
         uses: google-github-actions/deploy-cloudrun@v2
         with:
