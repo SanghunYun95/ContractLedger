@@ -18,10 +18,10 @@ ContractLedger는 B2B SaaS 환경에서 계약서를 효율적이고 안전하�
 
 ---
 
-## 🌐 라이브 데모 (GCP)
+## 🌐 라이브 데모 (GCP & Firebase)
 
 배포된 서비스의 실시간 주소입니다:
-- **Frontend**: [https://frontend-1007750315482.asia-northeast3.run.app](https://frontend-1007750315482.asia-northeast3.run.app)
+- **Frontend**: [https://vigilant-shift-490601-t5.web.app](https://vigilant-shift-490601-t5.web.app)
 - **Backend (API)**: [https://backend-1007750315482.asia-northeast3.run.app](https://backend-1007750315482.asia-northeast3.run.app)
 
 ---
