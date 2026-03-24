@@ -96,6 +96,34 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
     }
   };
 
+  const handleDownload = async (contract: Contract) => {
+    if (!token || !contract.fileUrl) return;
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+    try {
+      const res = await fetch(`${baseUrl}${contract.fileUrl}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "x-tenant-id": activeTenant.id,
+        },
+      });
+      if (!res.ok) throw new Error("Download failed");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = contract.originalFileName || "contract.pdf";
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Download error", e);
+      alert("파일을 다운로드하는 중 오류가 발생했습니다.");
+    }
+  };
+
   const translateStatus = (status: string) => {
     switch (status) {
       case 'SIGNED': return '서명 완료';
@@ -196,15 +224,14 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
                 <td className="px-6 py-6 text-right">
                   <div className="flex justify-end gap-1 text-zinc-500">
                     {contract.fileUrl && (
-                      <a 
-                        href={`${process.env.NEXT_PUBLIC_API_URL || ""}${contract.fileUrl}?token=${token}&tenantId=${activeTenant.id}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
+                      <button 
+                        type="button"
+                        onClick={() => handleDownload(contract)}
                         className="p-2 rounded-xl hover:bg-emerald-500/10 hover:text-emerald-500 transition-all active:scale-90"
                         title="파일 다운로드"
                       >
                         <span className="material-symbols-outlined text-[18px]">cloud_download</span>
-                      </a>
+                      </button>
                     )}
                     <button 
                       onClick={() => onEdit?.(contract)}
