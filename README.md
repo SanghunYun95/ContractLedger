@@ -1,5 +1,7 @@
 # ContractLedger (계약 원장 관리 시스템)
 
+> **상세 가이드**: [ContractLedger Overview](https://deepwiki.com/SanghunYun95/ContractLedger/1-contractledger-overview)
+
 ContractLedger는 B2B SaaS 환경에서 계약서를 효율적이고 안전하게 관리하기 위한 통합 플랫폼입니다. 멀티 테넌트 격리, 감사 로그, AI 기반 알림 시스템을 핵심 기능으로 제공하며, Clean Architecture와 DDD(도메인 주도 설계) 원칙을 준수하여 개발되었습니다.
 
 ---
@@ -95,13 +97,13 @@ ContractLedger는 B2B SaaS 환경에서 계약서를 효율적이고 안전하�
 처음 프로젝트를 실행한 경우, 아래 순서에 따라 핵심 기능을 검증할 수 있습니다.
 
 ### 1단계: 로그인 및 인증 (Multi-Tenancy)
-1.  **접속**: `http://localhost:3000` (로컬) 또는 [데모 사이트](https://contract-ledger.web.app) 접속
+1.  **접속**: [데모 사이트](https://contract-ledger.web.app) 접속
 2.  **로그인**: 
     *   **Email**: `test@example.com` / **PW**: `password123` / **Tenant**: `test-tenant`
-3.  **검증**: 우상단에 `test-tenant` 환경이 활성화되었는지 확인합니다.
+3.  **검증**: 우상단 프로필 영역에 `Acme Corp` (또는 설정한 테넌트명) 및 `Active Environment` 표시를 확인합니다. 또한 우측 하단 **'시스템 상태 (Live Status)'**가 모두 녹색(Operational/Active)인지 확인합니다.
 
 ### 2단계: 계약 등록 및 관리 (CRUD)
-1.  **이동**: 왼쪽 메뉴의 **'계약 보관함 (Vault)'** 아이콘 클릭
+1.  **이동**: 왼쪽 메뉴의 **'계약 보관함'** 아이콘 클릭
 2.  **등록**: **'신규 계약 등록'** 버튼을 누르고 임의의 제목과 내용을 입력 후 저장
 3.  **검증**: 목록에 방금 생성한 계약이 `DRAFT` 상태로 나타나는지 확인합니다.
 
