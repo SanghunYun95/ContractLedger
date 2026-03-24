@@ -28,7 +28,8 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
   const fetchContracts = async () => {
     if (!token) return;
     try {
-      const res = await fetch("/api/contracts", {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      const res = await fetch(`${baseUrl}/api/contracts`, {
         headers: {
           "x-tenant-id": activeTenant.id,
           "Authorization": `Bearer ${token}`
@@ -55,7 +56,8 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
     if (!token) return;
     setAnalyzingIds(prev => [...prev, id]);
     try {
-      const res = await fetch(`/api/contracts/${id}/analyze`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      const res = await fetch(`${baseUrl}/api/contracts/${id}/analyze`, {
         method: "POST",
         headers: {
           "x-tenant-id": activeTenant.id,
@@ -78,7 +80,8 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
   const handleDelete = async (id: string, title: string) => {
     if (!token || !confirm(`'${title}' 계약서를 보관함에서 영구적으로 삭제하시겠습니까?`)) return;
     try {
-      const res = await fetch(`/api/contracts/${id}`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      const res = await fetch(`${baseUrl}/api/contracts/${id}`, {
         method: "DELETE",
         headers: {
           "x-tenant-id": activeTenant.id,
@@ -135,7 +138,7 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
             <tr>
               <td colSpan={4} className="px-6 py-24 text-center text-zinc-500 text-sm">
                 <div className="flex flex-col items-center gap-4">
-                  <span className="material-symbols-outlined animate-spin text-4xl text-primary opacity-50">data_loading</span>
+                  <span className="material-symbols-outlined animate-spin text-4xl text-primary opacity-50">sync</span>
                   <div className="text-xs font-bold uppercase tracking-widest opacity-70">암호화된 기록에 접근 중...</div>
                 </div>
               </td>
@@ -194,7 +197,7 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
                   <div className="flex justify-end gap-1 text-zinc-500">
                     {contract.fileUrl && (
                       <a 
-                        href={`http://localhost:3001${contract.fileUrl}?token=${token}&tenantId=${activeTenant.id}`} 
+                        href={`${process.env.NEXT_PUBLIC_API_URL || ""}${contract.fileUrl}?token=${token}&tenantId=${activeTenant.id}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="p-2 rounded-xl hover:bg-emerald-500/10 hover:text-emerald-500 transition-all active:scale-90"

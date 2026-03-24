@@ -40,8 +40,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const rt = localStorage.getItem("refresh_token");
     if (!rt) return null;
 
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
     try {
-      const res = await fetch("/api/auth/refresh", {
+      const res = await fetch(`${baseUrl}/api/auth/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh_token: rt }),
@@ -83,7 +84,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [refreshToken]);
 
   const login = async (email: string, pass: string, tenantId: string) => {
-    const res = await fetch("/api/auth/login", {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+    const res = await fetch(`${baseUrl}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password: pass, tenantId }),
