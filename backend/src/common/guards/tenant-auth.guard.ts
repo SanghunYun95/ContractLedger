@@ -14,6 +14,12 @@ export class TenantAuthGuard implements CanActivate {
     const tenantIdFromQuery = query['tenantId'];
     
     const authHeaderRaw = headers['authorization'];
+    
+    // 중복 Authorization 헤더는 보안상 위험하므로 명시적으로 거절합니다.
+    if (Array.isArray(authHeaderRaw) && authHeaderRaw.length !== 1) {
+      throw new UnauthorizedException('Ambiguous authorization header');
+    }
+    
     const authHeader = Array.isArray(authHeaderRaw) ? authHeaderRaw[0] : authHeaderRaw;
     const tokenFromQuery = query['token'];
  

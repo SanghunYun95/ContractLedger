@@ -18,9 +18,6 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Contract Ledger | Audit & AI Webhooks",
   description: "The Sovereign Vault - Contract Ledger Platform",
-  icons: {
-    icon: "/icon.png",
-  },
 };
 
 export default function RootLayout({
