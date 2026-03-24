@@ -13,11 +13,12 @@ export class TenantAuthGuard implements CanActivate {
     const tenantIdFromHeader = headers['x-tenant-id'];
     const tenantIdFromQuery = query['tenantId'];
     
-    const authHeader = headers['authorization'];
+    const authHeaderRaw = headers['authorization'];
+    const authHeader = Array.isArray(authHeaderRaw) ? authHeaderRaw[0] : authHeaderRaw;
     const tokenFromQuery = query['token'];
-
+ 
     let token: string | undefined;
-
+ 
     if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
       token = authHeader.split(' ')[1];
     } else if (typeof tokenFromQuery === 'string') {
