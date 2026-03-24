@@ -14,6 +14,7 @@ ContractLedger는 B2B SaaS 환경에서 계약서를 효율적이고 안전하�
 - [x] **백엔드 핵심 모듈**: 멀티 테넌트 인가 가드, 이벤트 기반 감사 로그(Audit Log) 적재 완료
 - [x] **프리미엄 대시보드 UI**: Next.js (App Router) 기반 다크 모드 및 Glassmorphism 디자인 적용
 - [x] **GCP 배포 자동화**: Dockerize 후 Cloud Run 배포 파이프라인(CI/CD) 구축 완료
+- [x] **전용 도메인 설정**: `contract-ledger.web.app` 도메인 연결 및 CORS 최적화 완료
 - [ ] **AI 모델 고도화**: **gpt-4o** 기반 계약서 정밀 분석 및 리스크 조항 추출 기능 연동 예정
 
 ---
@@ -22,7 +23,7 @@ ContractLedger는 B2B SaaS 환경에서 계약서를 효율적이고 안전하�
 
 배포된 서비스의 실시간 주소입니다:
 - **Frontend**: [https://contract-ledger.web.app](https://contract-ledger.web.app) (Firebase)
-- **Backend (API)**: [https://backend-1007750315482.asia-northeast3.run.app](https://backend-1007750315482.asia-northeast3.run.app)
+- **Backend (API)**: 보안을 위해 대외비로 유지하며, 프론트엔드 프록시를 통해 통신합니다.
 
 ---
 

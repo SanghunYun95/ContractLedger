@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../domain/user.entity';
+import { Tenant } from '../domain/tenant.entity';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -10,6 +11,8 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Tenant)
+    private readonly tenantRepository: Repository<Tenant>,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -23,6 +26,39 @@ export class AuthService {
       }
     }
     return null;
+  }
+
+  async register(email: string, pass: string, tenantId: string) {
+    // Check if tenant exists, if not create it
+    let tenant = await this.tenantRepository.findOne({ where: { name: tenantId } });
+    if (!tenant) {
+      tenant = this.tenantRepository.create({ name: tenantId });
+      await this.tenantRepository.save(tenant);
+    }
+
+    // Check if user already exists in this tenant
+    const existingUser = await this.userRepository.findOne({ where: { email, tenantId } });
+    if (existingUser) {
+      throw new BadRequestException('User already exists in this tenant');
+    }
+
+    const hashedPassword = await this.hashPassword(pass);
+    const user = this.userRepository.create({
+      email,
+      password: hashedPassword,
+      tenantId,
+    });
+
+    await this.userRepository.save(user);
+
+    return {
+      message: 'User registered successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        tenantId: user.tenantId,
+      },
+    };
   }
 
   async login(email: string, pass: string, tenantId: string) {
