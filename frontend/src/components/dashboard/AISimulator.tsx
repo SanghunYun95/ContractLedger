@@ -17,7 +17,8 @@ export function AISimulator({ onTrigger }: AISimulatorProps) {
     if (!token) return;
     setLoading(true);
     try {
-      const response = await fetch("/api/notifications/webhook", {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      const response = await fetch(`${baseUrl}/api/notifications/webhook`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

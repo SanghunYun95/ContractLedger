@@ -17,8 +17,11 @@ async function bootstrap() {
     app.setGlobalPrefix('api');
     app.useGlobalFilters(new GlobalExceptionFilter());
 
+    const origins = process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()).filter(Boolean)
+      : ['http://localhost:3000', 'https://contract-ledger.web.app'];
     app.enableCors({
-      origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : 'http://localhost:3000',
+      origin: origins,
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
       allowedHeaders: 'Content-Type,Accept,Authorization,x-tenant-id',
     });

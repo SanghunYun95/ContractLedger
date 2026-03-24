@@ -78,7 +78,8 @@ export function AuditTable({ refreshTrigger }: AuditTableProps) {
       }
       setLoading(true);
       try {
-        const res = await fetch("/api/audit/logs", {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+        const res = await fetch(`${baseUrl}/api/audit/logs`, {
           headers: {
             "x-tenant-id": activeTenant.id,
             "Authorization": `Bearer ${token}`

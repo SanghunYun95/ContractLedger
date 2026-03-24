@@ -29,7 +29,10 @@ export function ContractForm({ contract, onSuccess, onCancel }: ContractFormProp
 
   // Helper to send request with given token
   const sendContractRequest = async (accessToken: string) => {
-    const url = contract ? `/api/contracts/${contract.id}` : "/api/contracts";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+    const fetchPath = contract ? `/api/contracts/${contract.id}` : "/api/contracts";
+    const url = baseUrl ? `${baseUrl}${fetchPath}` : fetchPath;
+    
     const method = contract ? "PATCH" : "POST";
     const payload = new FormData();
     payload.append("title", formData.title);
