@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AuditAction } from '../common/audit-action.enum';
 
 @Injectable()
 export class NotificationService {
@@ -27,7 +28,7 @@ export class NotificationService {
     this.eventEmitter.emit('audit.log.created', {
       tenantId,
       userId: 'ai_agent_01',
-      action: 'RISK_DETECTED',
+      action: AuditAction.RISK_DETECTED,
       resourceId,
       ipAddress: '127.0.0.1',
       details,

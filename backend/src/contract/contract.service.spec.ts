@@ -5,6 +5,7 @@ import { NotFoundException } from '@nestjs/common';
 import { ContractService } from './contract.service';
 import { Contract } from '../domain/contract.entity';
 import { StorageService } from '../common/services/storage.service';
+import { AuditAction } from '../common/audit-action.enum';
 
 describe('ContractService', () => {
   let service: ContractService;
@@ -119,7 +120,7 @@ describe('ContractService', () => {
       expect(result.riskScore).toBeGreaterThan(15);
       expect(repo.save).toHaveBeenCalled();
       expect(eventEmitter.emit).toHaveBeenCalledWith('audit.log.created', expect.objectContaining({
-          action: 'CONTRACT_AI_REVEIW'
+          action: AuditAction.CONTRACT_AI_REVIEW
       }));
     });
   });

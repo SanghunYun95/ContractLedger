@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Contract } from '../domain/contract.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { StorageService } from '../common/services/storage.service';
+import { AuditAction } from '../common/audit-action.enum';
 
 @Injectable()
 export class ContractService {
@@ -32,7 +33,7 @@ export class ContractService {
     this.eventEmitter.emit('audit.log.created', {
       tenantId,
       userId: 'system',
-      action: 'CREATE_CONTRACT',
+      action: AuditAction.CREATE_CONTRACT,
       resourceId: saved.id,
       details: { title: saved.title, hasFile: !!file },
     });
@@ -77,7 +78,7 @@ export class ContractService {
       this.eventEmitter.emit('audit.log.created', {
         tenantId,
         userId: 'system',
-        action: 'UPDATE_CONTRACT',
+        action: AuditAction.UPDATE_CONTRACT,
         resourceId: updated.id,
         details: { title: updated.title, updatedFields: Object.keys(updateData || {}) },
       });
@@ -102,7 +103,7 @@ export class ContractService {
     this.eventEmitter.emit('audit.log.created', {
       tenantId,
       userId: 'system',
-      action: 'DELETE_CONTRACT',
+      action: AuditAction.DELETE_CONTRACT,
       resourceId: id,
       details: { title: contract.title },
     });
@@ -139,7 +140,7 @@ export class ContractService {
     this.eventEmitter.emit('audit.log.created', {
       tenantId,
       userId: 'system',
-      action: 'CONTRACT_AI_REVEIW',
+      action: AuditAction.CONTRACT_AI_REVIEW,
       resourceId: analyzed.id,
       details: { riskScore: analyzed.riskScore },
     });
