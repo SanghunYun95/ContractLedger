@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "contract-ledger",
     "public": "frontend/public",
     "ignore": [
       "firebase.json",
