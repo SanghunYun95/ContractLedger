@@ -12,7 +12,7 @@ interface ContractFormProps {
 
 export function ContractForm({ contract, onSuccess, onCancel }: ContractFormProps) {
   const { activeTenant } = useTenant();
-  const { token } = useAuth();
+  const { token, refreshToken, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -46,7 +46,7 @@ export function ContractForm({ contract, onSuccess, onCancel }: ContractFormProp
       const url = contract ? `/api/contracts/${contract.id}` : "/api/contracts";
       const method = contract ? "PATCH" : "POST";
       
-      const res = await fetch(url, {
+      let res = await fetch(url, {
         method,
         headers: {
           "x-tenant-id": activeTenant.id,
@@ -54,6 +54,25 @@ export function ContractForm({ contract, onSuccess, onCancel }: ContractFormProp
         },
         body: payload
       });
+
+      // 401 Unauthorized 발생 시 토큰 갱신 후 재검토
+      if (res.status === 401) {
+        console.log("Token expired, attempting refresh...");
+        const newToken = await refreshToken();
+        if (newToken) {
+          res = await fetch(url, {
+            method,
+            headers: {
+              "x-tenant-id": activeTenant.id,
+              "Authorization": `Bearer ${newToken}`
+            },
+            body: payload
+          });
+        } else {
+          logout();
+          return;
+        }
+      }
 
       if (res.ok) {
         onSuccess();
