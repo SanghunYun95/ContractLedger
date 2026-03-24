@@ -50,7 +50,7 @@ jobs:
             GCS_PROJECT_ID=${{ env.PROJECT_ID }}
             GCS_BUCKET_NAME=contract-ledger-files
             SYNC_DB=true
-            CORS_ORIGIN=https://contract-ledger.web.app,https://contract-ledger.firebaseapp.com,https://vigilant-shift-490601-t5.web.app,https://vigilant-shift-490601-t5.firebaseapp.com,http://localhost:3000
+            CORS_ORIGIN=https://contract-ledger.web.app,https://contract-ledger.firebaseapp.com,https://vigilant-shift-490601-t5.web.app,https://vigilant-shift-490601-t5.firebaseapp.com
 
       - name: Build and Push Frontend
         run: |
