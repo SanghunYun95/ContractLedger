@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - fix/gcp-allow-unauthenticated
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -32,19 +31,13 @@ jobs:
       - name: Authorize Docker
         run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}
 
-      # Backend Build & Push
+      # 1. Backend Build & Push
       - name: Build and Push Backend
         run: |
           docker build -t ${{ env.GAR_LOCATION }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }} ./backend
           docker push ${{ env.GAR_LOCATION }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }}
 
-      # Frontend Build & Push
-      - name: Build and Push Frontend
-        run: |
-          docker build -t ${{ env.GAR_LOCATION }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }} ./frontend
-          docker push ${{ env.GAR_LOCATION }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
-
-      # Deploy Backend to Cloud Run
+      # 2. Deploy Backend to Cloud Run
       - name: Deploy Backend
         id: deploy_backend
         uses: google-github-actions/deploy-cloudrun@v2
@@ -61,7 +54,16 @@ jobs:
             SYNC_DB=true
             CORS_ORIGIN=https://frontend-1007750315482.asia-northeast3.run.app
 
-      # Deploy Frontend to Cloud Run
+      # 3. Frontend Build & Push (Inject Backend URL as Build Arg)
+      - name: Build and Push Frontend
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL=${{ steps.deploy_backend.outputs.url }} \
+            -t ${{ env.GAR_LOCATION }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }} \
+            ./frontend
+          docker push ${{ env.GAR_LOCATION }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+
+      # 4. Deploy Frontend to Cloud Run
       - name: Deploy Frontend
         uses: google-github-actions/deploy-cloudrun@v2
         with:
