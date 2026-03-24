@@ -27,13 +27,10 @@ export function ContractForm({ contract, onSuccess, onCancel }: ContractFormProp
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!token) return;
-
-    setLoading(true);
-    setError(null);
-
+  // Helper to send request with given token
+  const sendContractRequest = async (accessToken: string) => {
+    const url = contract ? `/api/contracts/${contract.id}` : "/api/contracts";
+    const method = contract ? "PATCH" : "POST";
     const payload = new FormData();
     payload.append("title", formData.title);
     payload.append("content", formData.content);
@@ -42,32 +39,34 @@ export function ContractForm({ contract, onSuccess, onCancel }: ContractFormProp
       payload.append("file", file);
     }
 
-    try {
-      const url = contract ? `/api/contracts/${contract.id}` : "/api/contracts";
-      const method = contract ? "PATCH" : "POST";
-      
-      let res = await fetch(url, {
-        method,
-        headers: {
-          "x-tenant-id": activeTenant.id,
-          "Authorization": `Bearer ${token}`
-        },
-        body: payload
-      });
+    return fetch(url, {
+      method,
+      headers: {
+        "x-tenant-id": activeTenant.id,
+        "Authorization": `Bearer ${accessToken}`
+      },
+      body: payload
+    });
+  };
 
-      // 401 Unauthorized 발생 시 토큰 갱신 후 재검토
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      let res = await sendContractRequest(token);
+
+      // 401 Unauthorized 발생 시 토큰 갱신 후 재진행
       if (res.status === 401) {
-        console.log("Token expired, attempting refresh...");
+        if (process.env.NODE_ENV === "development") {
+          console.log("Token expired, attempting refresh...");
+        }
         const newToken = await refreshToken();
         if (newToken) {
-          res = await fetch(url, {
-            method,
-            headers: {
-              "x-tenant-id": activeTenant.id,
-              "Authorization": `Bearer ${newToken}`
-            },
-            body: payload
-          });
+          res = await sendContractRequest(newToken);
         } else {
           logout();
           return;
