@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useTenant } from "@/context/TenantContext";
 import { useAuth } from "@/context/AuthContext";
 
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+
 interface Contract {
   id: string;
   title: string;
@@ -28,8 +30,7 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
   const fetchContracts = async () => {
     if (!token) return;
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-      const res = await fetch(`${baseUrl}/api/contracts`, {
+      const res = await fetch(`${API_BASE}/api/contracts`, {
         headers: {
           "x-tenant-id": activeTenant.id,
           "Authorization": `Bearer ${token}`
@@ -56,8 +57,7 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
     if (!token) return;
     setAnalyzingIds(prev => [...prev, id]);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-      const res = await fetch(`${baseUrl}/api/contracts/${id}/analyze`, {
+      const res = await fetch(`${API_BASE}/api/contracts/${id}/analyze`, {
         method: "POST",
         headers: {
           "x-tenant-id": activeTenant.id,
@@ -80,8 +80,7 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
   const handleDelete = async (id: string, title: string) => {
     if (!token || !confirm(`'${title}' 계약서를 보관함에서 영구적으로 삭제하시겠습니까?`)) return;
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-      const res = await fetch(`${baseUrl}/api/contracts/${id}`, {
+      const res = await fetch(`${API_BASE}/api/contracts/${id}`, {
         method: "DELETE",
         headers: {
           "x-tenant-id": activeTenant.id,
@@ -98,9 +97,8 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
 
   const handleDownload = async (contract: Contract) => {
     if (!token || !contract.fileUrl) return;
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
     try {
-      const res = await fetch(`${baseUrl}${contract.fileUrl}`, {
+      const res = await fetch(`${API_BASE}${contract.fileUrl}`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "x-tenant-id": activeTenant.id,
@@ -229,6 +227,7 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
                         onClick={() => handleDownload(contract)}
                         className="p-2 rounded-xl hover:bg-emerald-500/10 hover:text-emerald-500 transition-all active:scale-90"
                         title="파일 다운로드"
+                        aria-label="파일 다운로드"
                       >
                         <span className="material-symbols-outlined text-[18px]">cloud_download</span>
                       </button>
@@ -237,6 +236,7 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
                       onClick={() => onEdit?.(contract)}
                       className="p-2 rounded-xl hover:bg-primary/10 hover:text-primary transition-all active:scale-90"
                       title="수정"
+                      aria-label="계약 수정"
                     >
                       <span className="material-symbols-outlined text-[18px]">edit_square</span>
                     </button>
@@ -244,6 +244,7 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
                       onClick={() => handleDelete(contract.id, contract.title)}
                       className="p-2 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 transition-all active:scale-90"
                       title="삭제"
+                      aria-label="계약 삭제"
                     >
                       <span className="material-symbols-outlined text-[18px]">delete_sweep</span>
                     </button>
