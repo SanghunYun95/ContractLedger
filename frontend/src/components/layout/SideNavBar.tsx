@@ -3,9 +3,11 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export function SideNavBar() {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   const navItems = [
     { name: "대시보드", href: "/", icon: "dashboard" },
@@ -45,7 +47,10 @@ export function SideNavBar() {
       </nav>
 
       <div className="p-8 border-t border-outline-variant/5">
-        <button className="w-full flex items-center justify-center gap-2 bg-surface-container-high py-3 rounded-xl hover:bg-surface-container-highest transition-colors group">
+        <button 
+          onClick={logout}
+          className="w-full flex items-center justify-center gap-2 bg-surface-container-high py-3 rounded-xl hover:bg-surface-container-highest transition-colors group"
+        >
           <span className="material-symbols-outlined text-zinc-400 group-hover:text-red-400 transition-colors">logout</span>
           <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest group-hover:text-zinc-300">로그아웃 (Sign Out)</span>
         </button>
