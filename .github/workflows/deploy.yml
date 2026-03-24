@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - fix/gcp-allow-unauthenticated
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -51,12 +52,14 @@ jobs:
           service: backend
           image: ${{ env.GAR_LOCATION }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }}
           region: ${{ env.REGION }}
+          flags: --allow-unauthenticated
           env_vars: |
             NODE_ENV=production
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             GCS_PROJECT_ID=${{ env.PROJECT_ID }}
             GCS_BUCKET_NAME=contract-ledger-files
             SYNC_DB=true
+            CORS_ORIGIN=https://frontend-1007750315482.asia-northeast3.run.app
 
       # Deploy Frontend to Cloud Run
       - name: Deploy Frontend
@@ -65,6 +68,7 @@ jobs:
           service: frontend
           image: ${{ env.GAR_LOCATION }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
           region: ${{ env.REGION }}
+          flags: --allow-unauthenticated
           env_vars: |
             NODE_ENV=production
-            API_URL=${{ steps.deploy_backend.outputs.url }}
+            NEXT_PUBLIC_API_URL=${{ steps.deploy_backend.outputs.url }}
