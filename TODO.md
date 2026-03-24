@@ -19,7 +19,7 @@
     - [x] `NotificationService` 알림 전송 및 감사 로그 로직 분리
 
 ## 진행 중 / 향후 과제 (Backlog)
-- [ ] **GCP Cloud Run 배포**: Dockerize 후 Google Cloud Run 배포 자동화 (CI/CD)
+- [x] **GCP Cloud Run 배포**: Dockerize 후 Google Cloud Run 배포 자동화 (CI/CD) 완료
 - [ ] **아키텍처 문서화**: GCP 인프라 다이어그램 및 프로젝트 아키텍처 가이드 정리
 - [ ] **AI 모델 고도화 연동**: 실제 LLM 기반 계약 정밀 분석 및 PDF 텍스트 추출 고도화
 - [ ] **실시간 알림**: WebSocket / Push API를 이용한 실시간 알림 시스템 구축
