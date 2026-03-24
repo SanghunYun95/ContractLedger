@@ -89,6 +89,39 @@ export default function LoginPage() {
           </button>
         </form>
 
+        <div className="pt-6 border-t border-outline-variant/5 space-y-4">
+          <div className="text-center">
+            <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-4">New Tenant Registration</p>
+          </div>
+          <button
+            onClick={async () => {
+              setError("");
+              setLoading(true);
+              try {
+                const res = await fetch("/api/auth/register", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email, password, tenantId }),
+                });
+                if (!res.ok) {
+                  const data = await res.json();
+                  throw new Error(data.message || "Registration failed");
+                }
+                alert("Security credentials registered. You can now access the vault.");
+              } catch (err: any) {
+                setError(err.message);
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+            className="w-full py-3 bg-surface-container-highest text-primary rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-primary/10 transition-all border border-primary/20 flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined text-sm">enhanced_encryption</span>
+            Register Security Credentials
+          </button>
+        </div>
+
         <p className="text-center text-[10px] text-zinc-600 uppercase tracking-widest font-bold pt-4">
           Secured by Quantum-Grade Encryption
         </p>
