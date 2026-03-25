@@ -109,7 +109,7 @@ ContractLedger는 B2B SaaS 환경에서 계약서를 효율적이고 안전하�
 1.  **접속**: [데모 사이트](https://contract-ledger.web.app) 접속
 2.  **로그인**: 
     *   **Email**: `test@example.com` / **PW**: `password123` / **Tenant**: `test-tenant`
-3.  **검증**: 우상단 프로필 영역에 `Acme Corp` (또는 설정한 테넌트명) 및 `Active Environment` 표시를 확인합니다. 또한 우측 하단 **'시스템 상태 (Live Status)'**가 모두 녹색(Operational/Active)인지 확인합니다.
+3.  **검증**: 우상단 프로필 영역에 `Acme Corp` (또는 설정한 테넌트명) 및 `Active Environment` 표시를 확인합니다. 또한 우측 하단 '시스템 상태 (Live Status)'가 모두 녹색(Operational/Active)인지 확인합니다.
 
 ### 2단계: 계약 등록 및 관리 (CRUD)
 1.  **이동**: 왼쪽 메뉴의 **'계약 보관함'** 아이콘 클릭
@@ -117,7 +117,7 @@ ContractLedger는 B2B SaaS 환경에서 계약서를 효율적이고 안전하�
 3.  **검증**: 목록에 방금 생성한 계약이 `DRAFT` 상태로 나타나는지 확인합니다.
 
 ### 3단계: 실시간 감사 로그 확인 (Audit Ledger)
-1.  **이동**: **'대시보드 (Dashboard)'**로 돌아가기
+1.  **이동**: '대시보드 (Dashboard)'로 돌아가기
 2.  **검증**: 하단 **'Audit Ledger'** 표에 **'CREATE_CONTRACT'** 액션이 실시간으로 기록되었는지 확인합니다.
 
 ### 4단계: AI 리스크 전송 시뮬레이션 (Webhook Integration)
