@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useTenant } from "@/context/TenantContext";
 import { useAuth } from "@/context/AuthContext";
+import { ContractAnalysisModal } from "./ContractAnalysisModal";
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
 
@@ -11,6 +12,7 @@ interface Contract {
   title: string;
   status: string;
   riskScore?: number;
+  riskAnalysis?: string;
   fileUrl?: string;
   originalFileName?: string;
 }
@@ -22,10 +24,13 @@ interface ContractListProps {
 
 export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
   const { activeTenant } = useTenant();
-  const { token } = useAuth();
+  const { token, refreshToken } = useAuth();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [analyzingIds, setAnalyzingIds] = useState<string[]>([]);
+  const [selectedAnalysisContract, setSelectedAnalysisContract] = useState<Contract | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
   const fetchContracts = async () => {
     if (!token) return;
@@ -39,6 +44,20 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
       if (res.ok) {
         const data = await res.json();
         setContracts(data);
+      } else if (res.status === 401) {
+        const newToken = await refreshToken();
+        if (newToken) {
+          const retryRes = await fetch(`${API_BASE}/api/contracts`, {
+            headers: {
+              "x-tenant-id": activeTenant.id,
+              "Authorization": `Bearer ${newToken}`
+            }
+          });
+          if (retryRes.ok) {
+            const data = await retryRes.json();
+            setContracts(data);
+          }
+        }
       }
     } catch (e) {
       console.error("Fetch failed", e);
@@ -53,40 +72,103 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
     fetchContracts();
   }, [activeTenant.id, refreshTrigger, token]);
 
-  const handleAnalyze = async (id: string) => {
-    if (!token) return;
+  // 실시간 알림 로직: 분석 완료 시 목록 자동 갱신
+  useEffect(() => {
+    const handleRefresh = () => {
+      fetchContracts();
+    };
+    window.addEventListener("refreshContracts", handleRefresh);
+    return () => window.removeEventListener("refreshContracts", handleRefresh);
+  }, []);
+
+  const handleAnalyze = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!token) {
+      console.warn("[ContractList] No auth token found. Cannot analyze.");
+      return;
+    }
+    
+    console.log(`[ContractList] Initiating AI analysis for contract ID: ${id}`);
+    
+    // 분석 시작 시 로딩 상태 추가
     setAnalyzingIds(prev => [...prev, id]);
+    
     try {
-      const res = await fetch(`${API_BASE}/api/contracts/${id}/analyze`, {
+      let currentToken = token;
+      let res = await fetch(`${API_BASE}/api/contracts/${id}/analyze`, {
         method: "POST",
         headers: {
           "x-tenant-id": activeTenant.id,
-          "Authorization": `Bearer ${token}`
+          "Authorization": `Bearer ${currentToken}`
         }
       });
-      if (res.ok) {
-        // Simple polling simulation or re-fetch
-        setTimeout(fetchContracts, 2000);
+      
+      if (res.status === 401) {
+        const newToken = await refreshToken();
+        if (newToken) {
+          currentToken = newToken;
+          res = await fetch(`${API_BASE}/api/contracts/${id}/analyze`, {
+            method: "POST",
+            headers: {
+              "x-tenant-id": activeTenant.id,
+              "Authorization": `Bearer ${currentToken}`
+            }
+          });
+        }
       }
-    } catch (e) {
-      console.error("Analysis failed", e);
+
+      console.log(`[ContractList] Analysis request result. Status: ${res.status}`);
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        console.error("[ContractList] Analysis request failed", {
+          status: res.status,
+          statusText: res.statusText,
+          errorData
+        });
+        throw new Error(errorData.message || "Analysis request failed");
+      }
+      
+      console.log("[ContractList] Analysis request accepted by server.");
+    } catch (e: any) {
+      console.error("[ContractList] Analysis error catch:", e);
+      alert(e.message || "AI 분석 서비스와 통신하는 중 오류가 발생했습니다.");
+      setAnalyzingIds(prev => prev.filter(aid => aid !== id));
     } finally {
+      // 분석 요청 완료 후 5초 뒤에 로딩 상태 제거 (충분한 시간을 둠)
       setTimeout(() => {
         setAnalyzingIds(prev => prev.filter(aid => aid !== id));
-      }, 2000);
+      }, 5000);
     }
   };
 
-  const handleDelete = async (id: string, title: string) => {
+  const handleDelete = async (id: string, title: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!token || !confirm(`'${title}' 계약서를 보관함에서 영구적으로 삭제하시겠습니까?`)) return;
     try {
-      const res = await fetch(`${API_BASE}/api/contracts/${id}`, {
+      let currentToken = token;
+      let res = await fetch(`${API_BASE}/api/contracts/${id}`, {
         method: "DELETE",
         headers: {
           "x-tenant-id": activeTenant.id,
-          "Authorization": `Bearer ${token}`
+          "Authorization": `Bearer ${currentToken}`
         }
       });
+
+      if (res.status === 401) {
+        const newToken = await refreshToken();
+        if (newToken) {
+          currentToken = newToken;
+          res = await fetch(`${API_BASE}/api/contracts/${id}`, {
+            method: "DELETE",
+            headers: {
+              "x-tenant-id": activeTenant.id,
+              "Authorization": `Bearer ${currentToken}`
+            }
+          });
+        }
+      }
+
       if (res.ok) {
         await fetchContracts();
       }
@@ -95,15 +177,31 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
     }
   };
 
-  const handleDownload = async (contract: Contract) => {
+  const handleDownload = async (contract: Contract, e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!token || !contract.fileUrl) return;
     try {
-      const res = await fetch(`${API_BASE}${contract.fileUrl}`, {
+      let currentToken = token;
+      let res = await fetch(`${API_BASE}${contract.fileUrl}`, {
         headers: {
-          "Authorization": `Bearer ${token}`,
+          "Authorization": `Bearer ${currentToken}`,
           "x-tenant-id": activeTenant.id,
         },
       });
+
+      if (res.status === 401) {
+        const newToken = await refreshToken();
+        if (newToken) {
+          currentToken = newToken;
+          res = await fetch(`${API_BASE}${contract.fileUrl}`, {
+            headers: {
+              "Authorization": `Bearer ${currentToken}`,
+              "x-tenant-id": activeTenant.id,
+            },
+          });
+        }
+      }
+
       if (!res.ok) throw new Error("Download failed");
 
       const blob = await res.blob();
@@ -120,6 +218,52 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
       console.error("Download error", e);
       alert("파일을 다운로드하는 중 오류가 발생했습니다.");
     }
+  };
+
+  const handlePreview = async (contract: Contract, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!token || !contract.fileUrl) return;
+    setIsPreviewLoading(true);
+    try {
+      let currentToken = token;
+      let res = await fetch(`${API_BASE}${contract.fileUrl}`, {
+        headers: {
+          "Authorization": `Bearer ${currentToken}`,
+          "x-tenant-id": activeTenant.id,
+        },
+      });
+
+      if (res.status === 401) {
+        const newToken = await refreshToken();
+        if (newToken) {
+          currentToken = newToken;
+          res = await fetch(`${API_BASE}${contract.fileUrl}`, {
+            headers: {
+              "Authorization": `Bearer ${currentToken}`,
+              "x-tenant-id": activeTenant.id,
+            },
+          });
+        }
+      }
+
+      if (!res.ok) throw new Error("File fetch failed");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+    } catch (e) {
+      console.error("Preview error", e);
+      alert("파일을 불러오는 중 오류가 발생했습니다.");
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  };
+
+  const closePreview = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
   };
 
   const translateStatus = (status: string) => {
@@ -181,7 +325,7 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
           ) : (
             contracts.map((contract) => (
               <tr key={contract.id} className="group hover:bg-white/[0.02] transition-colors cursor-default">
-                <td className="px-6 py-6">
+                <td className="px-6 py-6" onClick={() => onEdit?.(contract)}>
                   <div className="font-bold text-on-surface text-sm group-hover:text-primary transition-colors flex items-center gap-2">
                     {contract.title}
                     {contract.fileUrl && <span className="material-symbols-outlined text-[14px] text-emerald-500 font-bold" title="파일 업로드됨">verified</span>}
@@ -194,21 +338,27 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
                   </span>
                 </td>
                 <td className="px-6 py-6">
-                  {contract.riskScore !== undefined ? (
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 max-w-[80px] h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                  {contract.riskScore != null ? (
+                    <button 
+                      onClick={() => setSelectedAnalysisContract(contract)}
+                      className="flex items-center gap-3 group/risk hover:bg-white/5 p-2 rounded-xl transition-all"
+                    >
+                      <div className="flex-1 w-20 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                         <div 
                           className={`h-full transition-all duration-1000 ${contract.riskScore >= 70 ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.3)]' : (contract.riskScore >= 40 ? 'bg-amber-500' : 'bg-emerald-500')}`}
                           style={{ width: `${contract.riskScore}%` }}
                         />
                       </div>
-                      <span className={`text-[11px] font-black tracking-tighter ${getRiskColor(contract.riskScore)}`}>
-                        {contract.riskScore}% 리스크
-                      </span>
-                    </div>
+                      <div className="flex flex-col items-start gap-0.5">
+                        <span className={`text-[11px] font-black tracking-tighter ${getRiskColor(contract.riskScore)}`}>
+                          {contract.riskScore}% 리스크
+                        </span>
+                        <span className="text-[9px] text-primary font-bold uppercase tracking-widest opacity-0 group-hover/risk:opacity-100 transition-opacity">보고서 보기</span>
+                      </div>
+                    </button>
                   ) : (
                     <button 
-                      onClick={() => handleAnalyze(contract.id)}
+                      onClick={(e) => handleAnalyze(contract.id, e)}
                       disabled={analyzingIds.includes(contract.id)}
                       className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${analyzingIds.includes(contract.id) ? 'text-zinc-600 animate-pulse' : 'text-primary hover:text-white'}`}
                     >
@@ -222,15 +372,26 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
                 <td className="px-6 py-6 text-right">
                   <div className="flex justify-end gap-1 text-zinc-500">
                     {contract.fileUrl && (
-                      <button 
-                        type="button"
-                        onClick={() => handleDownload(contract)}
-                        className="p-2 rounded-xl hover:bg-emerald-500/10 hover:text-emerald-500 transition-all active:scale-90"
-                        title="파일 다운로드"
-                        aria-label="파일 다운로드"
-                      >
-                        <span className="material-symbols-outlined text-[18px]">cloud_download</span>
-                      </button>
+                      <>
+                        <button 
+                          type="button"
+                          onClick={(e) => handlePreview(contract, e)}
+                          className="p-2 rounded-xl hover:bg-primary/10 hover:text-primary transition-all active:scale-90"
+                          title="미리보기"
+                          aria-label="미리보기"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">visibility</span>
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={(e) => handleDownload(contract, e)}
+                          className="p-2 rounded-xl hover:bg-emerald-500/10 hover:text-emerald-500 transition-all active:scale-90"
+                          title="파일 다운로드"
+                          aria-label="파일 다운로드"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">cloud_download</span>
+                        </button>
+                      </>
                     )}
                     <button 
                       onClick={() => onEdit?.(contract)}
@@ -241,7 +402,7 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
                       <span className="material-symbols-outlined text-[18px]">edit_square</span>
                     </button>
                     <button 
-                      onClick={() => handleDelete(contract.id, contract.title)}
+                      onClick={(e) => handleDelete(contract.id, contract.title, e)}
                       className="p-2 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 transition-all active:scale-90"
                       title="삭제"
                       aria-label="계약 삭제"
@@ -255,6 +416,54 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
           )}
         </tbody>
       </table>
+
+      {/* Analysis Modal */}
+      {selectedAnalysisContract && (
+        <ContractAnalysisModal
+          contractTitle={selectedAnalysisContract.title}
+          riskScore={selectedAnalysisContract.riskScore || 0}
+          analysisJson={selectedAnalysisContract.riskAnalysis || "{}"}
+          onClose={() => setSelectedAnalysisContract(null)}
+        />
+      )}
+
+      {/* PDF Preview Modal */}
+      {previewUrl && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={closePreview} />
+          <div className="relative w-full max-w-5xl h-full bg-[#0a0a0b] rounded-3xl border border-white/10 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary">description</span>
+                <h3 className="font-bold text-white tracking-tight">문서 미리보기</h3>
+              </div>
+              <button 
+                onClick={closePreview}
+                className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/5 text-zinc-400 hover:text-white transition-all"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="flex-1 w-full bg-zinc-900/50">
+              <iframe 
+                src={`${previewUrl}#toolbar=0`} 
+                className="w-full h-full border-none"
+                title="PDF Preview"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Global Loading Overlay for Preview */}
+      {isPreviewLoading && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+          <div className="bg-[#121214] border border-white/10 p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-3">
+            <span className="material-symbols-outlined animate-spin text-primary text-3xl">sync</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">문서 보안 해제 및 로드 중...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
