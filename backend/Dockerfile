@@ -32,5 +32,6 @@ RUN chown -R appuser:appgroup /app
 USER appuser
 
 EXPOSE 8080
-# 앱 실행 경로를 명시적으로 지정하고, 실패 시 상세 원인을 출력하도록 개선
-CMD ["sh", "-c", "if [ -f dist/src/main.js ]; then node dist/src/main.js; elif [ -f dist/main.js ]; then node dist/main.js; else echo 'Error: main.js not found in expected locations'; ls -R dist; exit 1; fi"]
+# 쉘을 거치지 않고 직접 실행하여 유효하지 않은 환경 변수 이름 등으로 인한 시작 실패 방지
+CMD ["node", "dist/src/main.js"]
+

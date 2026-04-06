@@ -18,6 +18,10 @@ async function bootstrap() {
   const isProduction = process.env.NODE_ENV === 'production';
   logger.log(`Starting application in ${process.env.NODE_ENV || 'development'} mode...`);
 
+  // Log environment variable keys for debugging
+  const envKeys = Object.keys(process.env).sort();
+  logger.log(`Available Environment Variables: [${envKeys.join(', ')}]`);
+
   if (!process.env.JWT_SECRET) {
     logger.warn('⚠️ WARNING: JWT_SECRET environment variable is not set.');
     if (isProduction) {

@@ -8,12 +8,21 @@ export class AiService {
   private openai: OpenAI;
 
   constructor() {
-    if (!process.env.OPENAI_API_KEY) {
-      this.logger.warn('OPENAI_API_KEY is not defined in environment variables.');
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      this.logger.warn('⚠️ OPENAI_API_KEY is not defined. AI features will be disabled.');
+      this.openai = null as any;
+    } else {
+      try {
+        this.openai = new OpenAI({
+          apiKey: apiKey,
+        });
+        this.logger.log('OpenAI client initialized successfully.');
+      } catch (e) {
+        this.logger.error('Failed to initialize OpenAI client:', e);
+        this.openai = null as any;
+      }
     }
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
   }
 
   async extractTextFromPdf(buffer: Buffer): Promise<string> {
@@ -87,6 +96,11 @@ export class AiService {
         계약서 내용:
         ${text.substring(0, 7000)}
       `;
+
+      if (!this.openai) {
+        this.logger.error('OpenAI client is not initialized (API key might be missing).');
+        throw new Error('AI 분석 기능이 활성화되지 않았습니다. 관리자에게 문의하세요.');
+      }
 
       const response = await this.openai.chat.completions.create({
         model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
