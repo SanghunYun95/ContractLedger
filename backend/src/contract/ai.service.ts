@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import OpenAI from 'openai';
 // @ts-ignore
-const { PDFParse } = require('pdf-parse');
 
 @Injectable()
 export class AiService {
@@ -18,19 +17,27 @@ export class AiService {
   }
 
   async extractTextFromPdf(buffer: Buffer): Promise<string> {
-    let parser: any;
     try {
       this.logger.log('Extracting text from PDF...');
-      parser = new PDFParse({ data: buffer });
-      const data = await parser.getText();
+      
+      // pdf-parse 라이브러리는 버전에 따라 export 방식이 다를 수 있음 (함수 vs {PDFParse})
+      const pdf = require('pdf-parse');
+      let data: any;
+
+      if (typeof pdf === 'function') {
+        data = await pdf(buffer);
+      } else if (pdf && typeof pdf.PDFParse === 'function') {
+        const parser = new pdf.PDFParse({ data: buffer });
+        data = await parser.getText();
+        if (typeof parser.destroy === 'function') await parser.destroy();
+      } else {
+        throw new Error('pdf-parse 라이브러리 구조를 파악할 수 없습니다.');
+      }
+
       return data.text || '';
     } catch (error) {
       this.logger.error('Failed to extract text from PDF', error);
       throw new Error('PDF 텍스트 추출에 실패했습니다.');
-    } finally {
-      if (parser && typeof parser.destroy === 'function') {
-        await parser.destroy();
-      }
     }
   }
 
