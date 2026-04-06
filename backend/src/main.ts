@@ -3,31 +3,29 @@ try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   require('dotenv').config();
 } catch (e) {
-  // dotenv가 없을 경우 무시합니다.
+  // Ignore if dotenv is missing
 }
 
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from './app.module';
+import { AppModule } from './app.module'; // 임포트를 상단으로 통일
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   
-  // NODE_ENV 확인
   const isProduction = process.env.NODE_ENV === 'production';
-  logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.log(`Starting application in ${process.env.NODE_ENV || 'development'} mode...`);
 
   if (!process.env.JWT_SECRET) {
-    logger.warn('⚠️ WARNING: JWT_SECRET 환경 변수가 설정되지 않았습니다.');
+    logger.warn('⚠️ WARNING: JWT_SECRET environment variable is not set.');
     if (isProduction) {
-      logger.error('❌ CRITICAL: 프로덕션 환경에서 JWT_SECRET은 필수입니다. 앱을 시작할 수 없습니다.');
+      logger.error('❌ CRITICAL: JWT_SECRET is required in production. Exiting.');
       process.exit(1);
     }
   }
   
-  // Cloud Run은 환경 변수로 '8080' (문자열)을 주입하므로 숫자로 변환합니다.
   const rawPort = process.env.PORT || '8080';
   const port = parseInt(rawPort, 10);
   
@@ -37,15 +35,18 @@ async function bootstrap() {
   }
   
   try {
-    const app = await NestFactory.create(appModule);
+    logger.log(`Initializing NestJS app with port ${port}...`);
+    const app = await NestFactory.create(AppModule);
 
     app.setGlobalPrefix('api');
     app.useGlobalFilters(new GlobalExceptionFilter());
 
     const rawOrigins = process.env.CORS_ORIGIN || 'http://localhost:3000';
-    logger.log(`CORS_ORIGIN: ${rawOrigins}`);
+    logger.log(`CORS_ORIGIN set to: ${rawOrigins}`);
     
+    // Split origins carefully
     const origins = rawOrigins.split(/[;,]/).map(o => o.trim()).filter(Boolean);
+    logger.log(`Parsed CORS Origins: ${JSON.stringify(origins)}`);
       
     app.enableCors({
       origin: origins.length > 0 ? origins : true,
@@ -74,9 +75,9 @@ async function bootstrap() {
       SwaggerModule.setup('api/docs', app, document);
     }
 
-    // host를 '0.0.0.0'으로 지정하여 외부 연결을 허용합니다 (Cloud Run 필수).
+    logger.log(`Attempting to listen on 0.0.0.0:${port}...`);
     await app.listen(port, '0.0.0.0');
-    logger.log(`🚀 Application is running on: http://0.0.0.0:${port}`);
+    logger.log(`🚀 Application is successfully listening on: http://0.0.0.0:${port}`);
   } catch (err) {
     logger.error('❌ Fatal error during bootstrap:', err);
     if (err instanceof Error) {
@@ -86,7 +87,5 @@ async function bootstrap() {
   }
 }
 
-// AppModule imports must happen after reflect-metadata
-import { AppModule as appModule } from './app.module';
-
 bootstrap();
+
