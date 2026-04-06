@@ -3,7 +3,7 @@ import { AppModule } from './src/app.module';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Tenant } from './src/domain/tenant.entity';
 import { User } from './src/domain/user.entity';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { Repository } from 'typeorm';
 
 async function seed() {
