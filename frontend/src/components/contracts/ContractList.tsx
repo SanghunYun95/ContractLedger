@@ -79,7 +79,7 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
     };
     window.addEventListener("refreshContracts", handleRefresh);
     return () => window.removeEventListener("refreshContracts", handleRefresh);
-  }, []);
+  }, [fetchContracts]);
 
   const handleAnalyze = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -130,6 +130,12 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
       }
       
       console.log("[ContractList] Analysis request accepted by server.");
+      
+      // 분석 요청이 성공하면 서버로부터 받은 최신 데이터를 즉시 반영
+      const analyzedContract = await res.json();
+      if (analyzedContract && analyzedContract.riskAnalysis) {
+        setContracts(prev => prev.map(c => c.id === id ? analyzedContract : c));
+      }
     } catch (e: any) {
       console.error("[ContractList] Analysis error catch:", e);
       alert(e.message || "AI 분석 서비스와 통신하는 중 오류가 발생했습니다.");
@@ -429,7 +435,11 @@ export function ContractList({ onEdit, refreshTrigger }: ContractListProps) {
 
       {/* PDF Preview Modal */}
       {previewUrl && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
+        <div 
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8"
+        >
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={closePreview} />
           <div className="relative w-full max-w-5xl h-full bg-[#0a0a0b] rounded-3xl border border-white/10 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300">
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">

@@ -32,7 +32,12 @@ export function Toast({ show, onHide, type = 'info', title, message }: ToastProp
   const theme = getTheme();
 
   return (
-    <div className={`fixed bottom-8 right-8 z-[110] flex flex-col gap-3 transition-all duration-500 ease-out pointer-events-none ${show ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-4 scale-95"}`}>
+    <div 
+      role="status" 
+      aria-live="polite" 
+      aria-atomic="true"
+      className={`fixed bottom-8 right-8 z-[110] flex flex-col gap-3 transition-all duration-500 ease-out pointer-events-none ${show ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-4 scale-95"}`}
+    >
         <div className={`glass-card border ${theme.border} rounded-2xl p-5 flex items-start gap-4 shadow-2xl w-80 backdrop-blur-3xl`}>
             <div className={`w-10 h-10 rounded-full ${theme.bg} flex items-center justify-center flex-shrink-0 ${theme.iconColor}`}>
                 <span className="material-symbols-outlined text-[20px]" style={{fontVariationSettings: "'FILL' 1"}}>{theme.icon}</span>

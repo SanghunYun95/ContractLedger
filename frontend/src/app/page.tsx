@@ -33,6 +33,8 @@ export default function Dashboard() {
           <div className="flex gap-4 relative">
             <button 
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+              aria-haspopup="listbox"
+              aria-expanded={showFilterDropdown}
               className={`px-6 py-2.5 rounded-xl border border-outline-variant/10 text-sm font-medium flex items-center gap-2 transition-all cursor-pointer ${showFilterDropdown ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'}`}
             >
               <span className="material-symbols-outlined text-sm">filter_list</span> 
@@ -40,10 +42,15 @@ export default function Dashboard() {
             </button>
 
             {showFilterDropdown && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-zinc-900 border border-outline-variant/10 rounded-xl shadow-2xl z-50 overflow-hidden">
+              <div 
+                role="listbox"
+                className="absolute right-0 top-full mt-2 w-48 bg-zinc-900 border border-outline-variant/10 rounded-xl shadow-2xl z-50 overflow-hidden"
+              >
                 {filterOptions.map((opt) => (
                   <button
                     key={opt.value || 'all'}
+                    role="option"
+                    aria-selected={filterAction === opt.value}
                     onClick={() => {
                       setFilterAction(opt.value);
                       setShowFilterDropdown(false);
@@ -65,13 +72,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-      <Toast
-        show={showToast}
-        onHide={() => setShowToast(false)}
-        title="조치 완료"
-        message="요청하신 작업이 성공적으로 처리되었습니다."
-        type="success"
-      />
     </>
   );
 }

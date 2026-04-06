@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Contract } from '../domain/contract.entity';
@@ -141,13 +141,13 @@ export class ContractService {
         console.error(`[ContractService] Failed to extract text from PDF ${contract.fileUrl}:`, err);
         // 텍스트 추출 실패 시 기존 content가 있다면 그것으로 진행, 없다면 에러
         if (!textToAnalyze) {
-          throw new Error('PDF 파일에서 텍스트를 읽을 수 없습니다. 스캔된 이미지인지 확인해 주세요.');
+          throw new BadRequestException('PDF 파일에서 텍스트를 읽을 수 없습니다. 스캔된 이미지인지 확인해 주세요.');
         }
       }
     }
 
     if (!textToAnalyze || textToAnalyze.trim().length < 20) {
-      throw new Error('분석할 계약서 내용이 부족합니다. (최소 20자 이상 필요)');
+      throw new BadRequestException('분석할 계약서 내용이 부족합니다. (최소 20자 이상 필요)');
     }
 
     // OpenAI 실제 분석 수행
@@ -158,12 +158,16 @@ export class ContractService {
 
     const analyzed = await this.contractRepository.save(contract);
 
-    // 실시간 알림 전송
-    await this.notificationService.sendRealTimeNotification(tenantId, 'contract.analyzed', {
-      contractId: analyzed.id,
-      title: analyzed.title,
-      riskScore: analyzed.riskScore,
-    });
+    // 실시간 알림 전송 (오류 발생 시에도 분석 결과는 보존하기 위해 try-catch 처리)
+    try {
+      await this.notificationService.sendRealTimeNotification(tenantId, 'contract.analyzed', {
+        contractId: analyzed.id,
+        title: analyzed.title,
+        riskScore: analyzed.riskScore,
+      });
+    } catch (notificationError) {
+      console.error(`[ContractService] Failed to send real-time notification for contract ${analyzed.id}:`, notificationError);
+    }
 
     this.eventEmitter.emit('audit.log.created', {
       tenantId,

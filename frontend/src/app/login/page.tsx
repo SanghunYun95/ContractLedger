@@ -38,8 +38,9 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-label text-zinc-500 ml-1">업무용 이메일 (Work Email)</label>
+              <label htmlFor="email" className="text-xs font-label text-zinc-500 ml-1">업무용 이메일 (Work Email)</label>
               <input
+                id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -49,8 +50,9 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-label text-zinc-500 ml-1">보안 키 (Security Key)</label>
+              <label htmlFor="password" className="text-xs font-label text-zinc-500 ml-1">보안 키 (Security Key)</label>
               <input
+                id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -60,8 +62,9 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-label text-zinc-500 ml-1">테넌트 식별값 (Tenant ID)</label>
+              <label htmlFor="tenantId" className="text-xs font-label text-zinc-500 ml-1">테넌트 식별값 (Tenant ID)</label>
               <input
+                id="tenantId"
                 type="text"
                 value={tenantId}
                 onChange={(e) => setTenantId(e.target.value)}

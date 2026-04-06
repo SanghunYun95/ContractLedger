@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useTenant } from "@/context/TenantContext";
 import { useAuth } from "@/context/AuthContext";
 
@@ -74,7 +74,7 @@ export function AuditTable({ refreshTrigger, filterAction }: AuditTableProps) {
   
   const limit = 10; // Page size
 
-  const fetchLogs = async (currentOffset: number) => {
+  const fetchLogs = useCallback(async (currentOffset: number) => {
     if (!token) {
       setLoading(false);
       return;
@@ -120,7 +120,7 @@ export function AuditTable({ refreshTrigger, filterAction }: AuditTableProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, activeTenant.id, filterAction, refreshToken]);
 
   useEffect(() => {
     setOffset(0); // Reset offset when filter or tenant changes
@@ -200,6 +200,8 @@ export function AuditTable({ refreshTrigger, filterAction }: AuditTableProps) {
             type="button"
             onClick={handlePrev}
             disabled={offset === 0 || loading}
+            aria-label="이전 페이지"
+            title="이전 페이지"
             className="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <span className="material-symbols-outlined text-sm">chevron_left</span>
@@ -208,6 +210,8 @@ export function AuditTable({ refreshTrigger, filterAction }: AuditTableProps) {
             type="button"
             onClick={handleNext}
             disabled={offset + limit >= total || loading}
+            aria-label="다음 페이지"
+            title="다음 페이지"
             className="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <span className="material-symbols-outlined text-sm">chevron_right</span>

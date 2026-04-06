@@ -91,18 +91,47 @@ export class AiService {
       });
 
       const responseContent = response.choices[0].message.content || '{}';
-      this.logger.log(`OpenAI response received: ${responseContent.substring(0, 100)}...`);
-      const result = JSON.parse(responseContent);
+      this.logger.log(
+        `OpenAI response received. model=${process.env.OPENAI_MODEL || 'gpt-4o-mini'} contentLength=${responseContent.length}`,
+      );
+
+      let result: any;
+      try {
+        result = JSON.parse(responseContent);
+      } catch (parseError) {
+        this.logger.error('Failed to parse OpenAI JSON response', parseError);
+        throw new Error('AI 응답 데이터 형식이 올바르지 않습니다.');
+      }
+
+      // 모델 응답 스키마 검증: riskScore 범위 체크 및 타입 강제
+      const parsedRiskScore = Number(result.riskScore);
+      const riskScore = Number.isFinite(parsedRiskScore)
+        ? Math.min(100, Math.max(0, parsedRiskScore))
+        : 0;
+
+      // 배열 필드 구조 검증
+      const redFlags = Array.isArray(result.redFlags) ? result.redFlags : [];
+      const marketStandards = Array.isArray(result.marketStandards) ? result.marketStandards : [];
+
+      // 상세 분석 객체 구조 검증
+      const detailedAnalysis =
+        result.detailedAnalysis && typeof result.detailedAnalysis === 'object'
+          ? {
+              critical: Array.isArray(result.detailedAnalysis.critical) ? result.detailedAnalysis.critical : [],
+              important: Array.isArray(result.detailedAnalysis.important) ? result.detailedAnalysis.important : [],
+              acceptable: Array.isArray(result.detailedAnalysis.acceptable) ? result.detailedAnalysis.acceptable : [],
+            }
+          : { critical: [], important: [], acceptable: [] };
 
       return {
-        riskScore: result.riskScore || 0,
+        riskScore,
         riskAnalysis: JSON.stringify({
           overall: result.riskLevel || 'Low',
           summary: result.summary || '분석된 특별한 위험 요소가 없습니다.',
           partyContext: result.partyContext || '당사자 지위를 명확히 파악할 수 없습니다.',
-          redFlags: result.redFlags || [],
-          marketStandards: result.marketStandards || [],
-          detailedAnalysis: result.detailedAnalysis || { critical: [], important: [], acceptable: [] }
+          redFlags,
+          marketStandards,
+          detailedAnalysis,
         }),
       };
     } catch (error) {

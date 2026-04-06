@@ -32,12 +32,13 @@ export class AuditController {
       where.action = action;
     }
 
+    const effectiveLimit = Math.min(limit, 200);
     const [data, total] = await this.auditLogRepository.findAndCount({
       where,
       order: { createdAt: 'DESC' },
-      take: Math.min(limit, 200),
+      take: effectiveLimit,
       skip: offset,
     });
-    return { data, total, limit, offset };
+    return { data, total, limit: effectiveLimit, offset };
   }
 }

@@ -34,11 +34,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       
       const socketInstance = io(`${socketUrl}/notifications`, {
         transports: ["websocket"],
+        auth: { token }, // Pass JWT during connection
       });
 
       socketInstance.on("connect", () => {
         console.log("Connected to notification gateway");
-        socketInstance.emit("joinTenant", activeTenant.id);
+        // No longer need to send tenantId, server derives it from JWT
+        socketInstance.emit("joinTenant");
       });
 
       socketInstance.on("contract.analyzed", (data: { contractId: string; title: string; riskScore: number }) => {

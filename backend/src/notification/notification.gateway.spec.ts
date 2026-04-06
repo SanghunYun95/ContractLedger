@@ -1,27 +1,37 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationGateway } from './notification.gateway';
+import { JwtService } from '@nestjs/jwt';
 
 describe('NotificationGateway', () => {
   let gateway: NotificationGateway;
   
-  // Mocking the Socket object
+  // 소켓(Socket) 객체 모킹
   let mockSocket: any;
-  // Mocking the Server object
+  // 서버(Server) 객체 모킹
   let mockServer: any;
   let mockTo: any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [NotificationGateway],
+      providers: [
+        NotificationGateway,
+        {
+          provide: JwtService,
+          useValue: { verify: jest.fn() },
+        },
+      ],
     }).compile();
 
     gateway = module.get<NotificationGateway>(NotificationGateway);
 
-    // Initialize mocks
+    // 모의 객체 초기화
     mockSocket = {
       id: 'test-client-id',
       join: jest.fn(),
       leave: jest.fn(),
+      data: {}, // 테넌트 ID 등 세션 정보가 저장될 객체
+      handshake: { auth: {}, query: {} },
+      disconnect: jest.fn(),
     };
 
     mockTo = {
@@ -32,30 +42,38 @@ describe('NotificationGateway', () => {
       to: jest.fn().mockReturnValue(mockTo),
     };
 
-    // Injection of mocked server
+    // 모킹된 서버 주입
     gateway.server = mockServer;
   });
 
-  it('should be defined', () => {
+  it('게이트웨이가 정의되어 있어야 함', () => {
     expect(gateway).toBeDefined();
   });
 
   describe('handleJoinTenant', () => {
-    it('should join the correct tenant room', () => {
-      gateway.handleJoinTenant(mockSocket, 'uuid-tenant-123');
+    it('클라이언트 데이터의 테넌트 ID를 기반으로 올바른 룸에 접속해야 함', () => {
+      mockSocket.data.tenantId = 'uuid-tenant-123';
+      gateway.handleJoinTenant(mockSocket);
       expect(mockSocket.join).toHaveBeenCalledWith('tenant_uuid-tenant-123');
+    });
+
+    it('테넌트 ID가 없으면 룸 접속을 무시해야 함', () => {
+      mockSocket.data.tenantId = undefined;
+      gateway.handleJoinTenant(mockSocket);
+      expect(mockSocket.join).not.toHaveBeenCalled();
     });
   });
 
   describe('handleLeaveTenant', () => {
-    it('should leave the correct tenant room', () => {
-      gateway.handleLeaveTenant(mockSocket, 'uuid-tenant-123');
+    it('클라이언트 데이터의 테넌트 ID를 기반으로 룸에서 나가야 함', () => {
+      mockSocket.data.tenantId = 'uuid-tenant-123';
+      gateway.handleLeaveTenant(mockSocket);
       expect(mockSocket.leave).toHaveBeenCalledWith('tenant_uuid-tenant-123');
     });
   });
 
   describe('sendNotification', () => {
-    it('should emit the test payload to the specific tenant room', () => {
+    it('지정된 테넌트 룸으로 이벤트를 전송해야 함', () => {
       const tenantId = 'test-tenant';
       const eventName = 'contract_analysis_done';
       const payload = { success: true, riskScore: 80 };

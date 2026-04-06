@@ -3,16 +3,28 @@ import { AiService } from './ai.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// pdf-parse 동작 모킹
+// pdf-parse 동작 모킹 (AiService의 named export PDFParse 사용에 맞춤)
 jest.mock('pdf-parse', () => {
-  return jest.fn().mockImplementation((buffer) => {
-    if (buffer.toString('utf-8') === 'invalid pdf data') {
+  const mockGetText = jest.fn().mockImplementation(function(this: any) {
+    // @ts-ignore
+    const buffer = this.data;
+    if (buffer && buffer.toString('utf-8') === 'invalid pdf data') {
       return Promise.reject(new Error('Invalid PDF 구조'));
     }
     return Promise.resolve({
-      text: buffer.length > 0 ? '이것은 임대차 혹은 기밀유지 계약서 파싱 결과입니다. (Mocked Data)' : ''
+      text: (buffer && buffer.length > 0) 
+        ? '이것은 임대차 혹은 기밀유지 계약서 파싱 결과입니다. (Mocked Data)' 
+        : ''
     });
   });
+
+  return {
+    PDFParse: jest.fn().mockImplementation(function(this: any, { data }) {
+      this.data = data;
+      this.getText = mockGetText;
+      this.destroy = jest.fn().mockResolvedValue(undefined);
+    })
+  };
 });
 
 
@@ -37,24 +49,13 @@ describe('AiService', () => {
   });
 
   describe('extractTextFromPdf', () => {
-    it('should extract text from 주택임대차표준계약서 PDF', async () => {
-      const pdfPath = path.resolve(__dirname, '../../../documents/samples/주택임대차표준계약서.pdf');
-      const buffer = fs.readFileSync(pdfPath);
+    it('should extract text from mock PDF buffer', async () => {
+      const buffer = Buffer.from('dummy-content', 'utf-8');
       const text = await service.extractTextFromPdf(buffer);
       
       expect(text).toBeDefined();
       expect(typeof text).toBe('string');
-      // 임대차 계약서라 보증금, 월세 등 단어가 있을 것으로 추정
-      expect(text.length).toBeGreaterThan(10);
-    });
-
-    it('should extract text from 표준비밀유지계약서 PDF', async () => {
-      const pdfPath = path.resolve(__dirname, '../../../documents/samples/표준비밀유지계약서.pdf');
-      const buffer = fs.readFileSync(pdfPath);
-      const text = await service.extractTextFromPdf(buffer);
-      
-      expect(text).toBeDefined();
-      expect(typeof text).toBe('string');
+      expect(text).toContain('(Mocked Data)');
       expect(text.length).toBeGreaterThan(10);
     });
 
