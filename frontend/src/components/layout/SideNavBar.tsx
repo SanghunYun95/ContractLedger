@@ -12,9 +12,6 @@ export function SideNavBar() {
   const navItems = [
     { name: "대시보드", href: "/", icon: "dashboard" },
     { name: "계약 보관함", href: "/contracts", icon: "description" },
-    { name: "데이터 분석", href: "#", icon: "insights" },
-    { name: "컴플라이언스", href: "#", icon: "gavel" },
-    { name: "설정", href: "#", icon: "settings" },
   ];
 
   return (

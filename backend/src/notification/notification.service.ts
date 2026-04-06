@@ -1,12 +1,20 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AuditAction } from '../common/audit-action.enum';
+import { NotificationGateway } from './notification.gateway';
 
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
 
-  constructor(private readonly eventEmitter: EventEmitter2) {}
+  constructor(
+    private readonly eventEmitter: EventEmitter2,
+    private readonly notificationGateway: NotificationGateway,
+  ) {}
+
+  async sendRealTimeNotification(tenantId: string, event: string, payload: any) {
+    this.notificationGateway.sendNotification(tenantId, event, payload);
+  }
 
   async processWebhook(payload: any) {
     if (!payload?.tenantId) {

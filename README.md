@@ -15,21 +15,6 @@ ContractLedger는 B2B SaaS 환경에서 계약서를 효율적이고 안전하�
 
 ---
 
-## 📝 프로젝트 진행 현황 (TODO)
-
-현재 프로젝트의 주요 개발 완료 사항 및 향후 계획입니다. 구체적인 내용은 `TODO.md` 파일에서 확인하실 수 있습니다.
-
-- [x] **프로젝트 구조 개편**: `backend`, `frontend` 폴더 분리 및 정리 완료
-- [x] **인증 및 보안**: JWT 기반 로그인 및 Refresh Token(30일) 도입, Silent Refresh 구현
-- [x] **GCP 스토리지 연동**: Google Cloud Storage(GCS)를 통한 파일 업로드/다운로드 프록시 구현
-- [x] **백엔드 핵심 모듈**: 멀티 테넌트 인가 가드, 이벤트 기반 감사 로그(Audit Log) 적재 완료
-- [x] **프리미엄 대시보드 UI**: Next.js (App Router) 기반 다크 모드 및 Glassmorphism 디자인 적용
-- [x] **GCP 배포 자동화**: Dockerize 후 Cloud Run 배포 파이프라인(CI/CD) 구축 완료
-- [x] **전용 도메인 설정**: `contract-ledger.web.app` 도메인 연결 및 CORS 최적화 완료
-- [ ] **AI 모델 고도화**: **gpt-4o** 기반 계약서 정밀 분석 및 리스크 조항 추출 기능 연동 예정
-
----
-
 ## 🌐 라이브 데모 (GCP & Firebase)
 
 배포된 서비스의 실시간 주소입니다:

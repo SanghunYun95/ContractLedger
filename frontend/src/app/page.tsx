@@ -2,19 +2,22 @@
 
 import React, { useState } from "react";
 import { AuditTable } from "@/components/dashboard/AuditTable";
-import { AISimulator } from "@/components/dashboard/AISimulator";
 import { Toast } from "@/components/ui/Toast";
 
 export default function Dashboard() {
   const [showToast, setShowToast] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [filterAction, setFilterAction] = useState<string | null>(null);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
-  const handleTrigger = (success: boolean) => {
-    if (success) {
-      setShowToast(true);
-      setRefreshKey(prev => prev + 1);
-    }
-  };
+  const filterOptions = [
+    { label: "전체 보기", value: null },
+    { label: "계약 생성", value: "CREATE_CONTRACT" },
+    { label: "계약 수정", value: "UPDATE_CONTRACT" },
+    { label: "AI 분석 실행", value: "CONTRACT_AI_REVIEW" },
+    { label: "리스크 감지", value: "RISK_DETECTED" },
+    { label: "서명 완료", value: "SIGNATURE_COMPLETED" },
+  ];
 
   return (
     <>
@@ -22,32 +25,53 @@ export default function Dashboard() {
         {/* Hero Metrics / Header */}
         <div className="flex justify-between items-end">
           <div>
-            <h1 className="text-4xl font-headline font-extrabold tracking-tight text-on-surface">Audit Ledger</h1>
-            <p className="text-zinc-500 mt-2 max-w-lg">
-              Real-time immutable tracking of all platform events, contract modifications, and security anomalies.
+            <h1 className="text-4xl font-headline font-extrabold tracking-tight text-on-surface">감사 로그 (Audit Ledger)</h1>
+            <p className="text-zinc-400 mt-2 max-w-2xl leading-relaxed">
+              플랫폼 내 모든 이벤트, 계약 수정 및 보안 이상 징후를 실시간으로 추적 중입니다.
             </p>
           </div>
-          <div className="flex gap-4">
-            <button className="px-6 py-2.5 bg-surface-container-high text-on-surface rounded-xl border border-outline-variant/10 text-sm font-medium flex items-center gap-2 hover:bg-surface-container-highest transition-colors cursor-pointer">
-              <span className="material-symbols-outlined text-sm">filter_list</span> Filter Logs
+          <div className="flex gap-4 relative">
+            <button 
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+              aria-haspopup="listbox"
+              aria-expanded={showFilterDropdown}
+              className={`px-6 py-2.5 rounded-xl border border-outline-variant/10 text-sm font-medium flex items-center gap-2 transition-all cursor-pointer ${showFilterDropdown ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'}`}
+            >
+              <span className="material-symbols-outlined text-sm">filter_list</span> 
+              {filterAction ? filterOptions.find(o => o.value === filterAction)?.label : "로그 필터링"}
             </button>
-            <button className="px-6 py-2.5 bg-primary text-on-primary-container rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-primary/10 hover:scale-[1.02] transition-transform cursor-pointer">
-              <span className="material-symbols-outlined text-sm">download</span> Export CSV
-            </button>
+
+            {showFilterDropdown && (
+              <div 
+                role="listbox"
+                className="absolute right-0 top-full mt-2 w-48 bg-zinc-900 border border-outline-variant/10 rounded-xl shadow-2xl z-50 overflow-hidden"
+              >
+                {filterOptions.map((opt) => (
+                  <button
+                    key={opt.value || 'all'}
+                    role="option"
+                    aria-selected={filterAction === opt.value}
+                    onClick={() => {
+                      setFilterAction(opt.value);
+                      setShowFilterDropdown(false);
+                    } }
+                    className={`w-full text-left px-5 py-3 text-xs font-bold hover:bg-white/5 transition-colors ${filterAction === opt.value ? 'text-primary' : 'text-zinc-400'}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Main Layout Grid */}
         <div className="grid grid-cols-12 gap-8">
-          <div className="col-span-12 xl:col-span-9 space-y-4">
-            <AuditTable refreshTrigger={refreshKey} />
-          </div>
-          <div className="col-span-12 xl:col-span-3 space-y-6">
-            <AISimulator onTrigger={handleTrigger} />
+          <div className="col-span-12 space-y-4">
+            <AuditTable refreshTrigger={refreshKey} filterAction={filterAction} />
           </div>
         </div>
       </div>
-      <Toast show={showToast} onHide={() => setShowToast(false)} />
     </>
   );
 }

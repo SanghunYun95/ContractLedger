@@ -29,17 +29,18 @@ export default function LoginPage() {
       <div className="w-full max-w-md glass-card rounded-3xl border border-outline-variant/10 p-10 space-y-8 shadow-2xl">
         <div className="text-center space-y-2">
           <div className="w-16 h-16 bg-primary-container/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/20">
-            <span className="material-symbols-outlined text-primary text-3xl" style={{fontVariationSettings: "'FILL' 1"}}>lock</span>
+            <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
           </div>
           <h1 className="text-3xl font-headline font-extrabold tracking-tight text-on-surface">Contract Ledger</h1>
-          <p className="text-zinc-500 text-sm">Sign in to access your audit vault</p>
+          <p className="text-zinc-500 text-sm">감사 보관함 액세스를 위해 로그인하세요</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-label text-zinc-500 ml-1">Work Email</label>
+              <label htmlFor="email" className="text-xs font-label text-zinc-500 ml-1">업무용 이메일 (Work Email)</label>
               <input
+                id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -49,8 +50,9 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-label text-zinc-500 ml-1">Security Key</label>
+              <label htmlFor="password" className="text-xs font-label text-zinc-500 ml-1">보안 키 (Security Key)</label>
               <input
+                id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -60,8 +62,9 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-label text-zinc-500 ml-1">Tenant ID</label>
+              <label htmlFor="tenantId" className="text-xs font-label text-zinc-500 ml-1">테넌트 식별값 (Tenant ID)</label>
               <input
+                id="tenantId"
                 type="text"
                 value={tenantId}
                 onChange={(e) => setTenantId(e.target.value)}
@@ -84,14 +87,14 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-4 bg-primary text-on-primary-container rounded-2xl font-bold hover:scale-[1.01] active:scale-95 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2 group disabled:opacity-50"
           >
-            {loading ? "Decrypting..." : "Access Vault"}
+            {loading ? "데이터 복호화 중..." : "보관함 액세스 (Access Vault)"}
             {!loading && <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>}
           </button>
         </form>
 
         <div className="pt-6 border-t border-outline-variant/5 space-y-4">
           <div className="text-center">
-            <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-4">New Tenant Registration</p>
+            <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-4">신규 테넌트 등록 (New Registration)</p>
           </div>
           <button
             onClick={async () => {
@@ -105,9 +108,9 @@ export default function LoginPage() {
                 });
                 if (!res.ok) {
                   const data = await res.json();
-                  throw new Error(data.message || "Registration failed");
+                  throw new Error(data.message || "등록 실패 (Registration failed)");
                 }
-                alert("Security credentials registered. You can now access the vault.");
+                alert("보안 인증 정보가 등록되었습니다. 이제 보관함에 액세스할 수 있습니다.");
               } catch (err: any) {
                 setError(err.message);
               } finally {
@@ -118,12 +121,12 @@ export default function LoginPage() {
             className="w-full py-3 bg-surface-container-highest text-primary rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-primary/10 transition-all border border-primary/20 flex items-center justify-center gap-2 disabled:opacity-50"
           >
             <span className="material-symbols-outlined text-sm">enhanced_encryption</span>
-            Register Security Credentials
+            보안 인증 정보 등록
           </button>
         </div>
 
         <p className="text-center text-[10px] text-zinc-600 uppercase tracking-widest font-bold pt-4">
-          Secured by Quantum-Grade Encryption
+          Industry-Standard Encryption
         </p>
       </div>
     </div>

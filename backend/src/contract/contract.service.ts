@@ -1,10 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Contract } from '../domain/contract.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { StorageService } from '../common/services/storage.service';
 import { AuditAction } from '../common/audit-action.enum';
+import { AiService } from './ai.service';
+import { NotificationService } from '../notification/notification.service';
+import { Readable } from 'stream';
 
 @Injectable()
 export class ContractService {
@@ -13,6 +16,8 @@ export class ContractService {
     private readonly contractRepository: Repository<Contract>,
     private readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
+    private readonly aiService: AiService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(tenantId: string, contractData: Partial<Contract>, file?: any): Promise<Contract> {
@@ -112,30 +117,57 @@ export class ContractService {
   async analyze(id: string, tenantId: string): Promise<Contract> {
     const contract = await this.findOne(id, tenantId);
     
-    // AI Analysis simulation
-    console.log(`Analyzing contract content for risk: ${contract.title}`);
-    
-    // Simulated delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Dummy risk calculation logic based on dummy text
-    const lowRiskPhrases = ['standard', 'mutual', 'friendly'];
-    const highRiskPhrases = ['immediate', 'non-refundable', 'exclusive', 'penalty'];
-    
-    let score = 15; // Base low risk
-    const text = (contract.title + ' ' + contract.content).toLowerCase();
-    
-    highRiskPhrases.forEach(p => { if (text.includes(p)) score += 20; });
-    score = Math.min(score, 95);
+    let textToAnalyze = contract.content || '';
 
-    contract.riskScore = score;
-    contract.riskAnalysis = JSON.stringify({
-      overall: score > 60 ? 'High' : (score > 30 ? 'Medium' : 'Low'),
-      foundKeywords: highRiskPhrases.filter(p => text.includes(p)),
-      summary: score > 60 ? 'Significant liability risks detected.' : 'Standard risk profile.'
-    });
+    // 만약 파일이 업로드되어 있다면 PDF 텍스트 추출 시도
+    if (contract.fileUrl) {
+      try {
+        console.log(`[ContractService] Attempting to extract text from PDF: ${contract.fileUrl}`);
+        // fileUrl에서 GCS 파일 경로 추출 (GcsStorageService 로직 참고)
+        const storagePath = contract.fileUrl.replace('/api/contracts/download/', '');
+        const stream = await this.storageService.getFileStream(storagePath);
+        const buffer = await this.streamToBuffer(stream);
+        
+        const extractedText = await this.aiService.extractTextFromPdf(buffer);
+        if (extractedText && extractedText.trim().length > 10) {
+          textToAnalyze = extractedText;
+          console.log(`[ContractService] PDF text extracted successfully (${extractedText.length} chars)`);
+          // 추출된 텍스트를 content 필드에 백업 (선택 사항)
+          contract.content = extractedText.substring(0, 10000); 
+        } else {
+          console.warn(`[ContractService] Extracted text is too short or empty. Fallback to manually entered content.`);
+        }
+      } catch (err) {
+        console.error(`[ContractService] Failed to extract text from PDF ${contract.fileUrl}:`, err);
+        // 텍스트 추출 실패 시 기존 content가 있다면 그것으로 진행, 없다면 에러
+        if (!textToAnalyze) {
+          throw new BadRequestException('PDF 파일에서 텍스트를 읽을 수 없습니다. 스캔된 이미지인지 확인해 주세요.');
+        }
+      }
+    }
+
+    if (!textToAnalyze || textToAnalyze.trim().length < 20) {
+      throw new BadRequestException('분석할 계약서 내용이 부족합니다. (최소 20자 이상 필요)');
+    }
+
+    // OpenAI 실제 분석 수행
+    const { riskScore, riskAnalysis } = await this.aiService.analyzeContract(textToAnalyze);
+
+    contract.riskScore = riskScore;
+    contract.riskAnalysis = riskAnalysis;
 
     const analyzed = await this.contractRepository.save(contract);
+
+    // 실시간 알림 전송 (오류 발생 시에도 분석 결과는 보존하기 위해 try-catch 처리)
+    try {
+      await this.notificationService.sendRealTimeNotification(tenantId, 'contract.analyzed', {
+        contractId: analyzed.id,
+        title: analyzed.title,
+        riskScore: analyzed.riskScore,
+      });
+    } catch (notificationError) {
+      console.error(`[ContractService] Failed to send real-time notification for contract ${analyzed.id}:`, notificationError);
+    }
 
     this.eventEmitter.emit('audit.log.created', {
       tenantId,
@@ -146,6 +178,15 @@ export class ContractService {
     });
 
     return analyzed;
+  }
+
+  private async streamToBuffer(stream: Readable): Promise<Buffer> {
+    const chunks: any[] = [];
+    return new Promise((resolve, reject) => {
+      stream.on('data', (chunk) => chunks.push(chunk));
+      stream.on('error', (err) => reject(err));
+      stream.on('end', () => resolve(Buffer.concat(chunks)));
+    });
   }
 
   async getFileStream(filePath: string) {

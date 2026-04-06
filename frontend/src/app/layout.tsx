@@ -3,6 +3,7 @@ import { Manrope, Inter } from "next/font/google";
 import "./globals.css";
 import { TenantProvider } from "@/context/TenantContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { NotificationProvider } from "@/context/NotificationContext";
 import LayoutContent from "@/components/layout/LayoutContent";
 
 const manrope = Manrope({
@@ -36,7 +37,9 @@ export default function RootLayout({
       <body className="bg-surface font-body text-on-surface overflow-hidden">
         <AuthProvider>
           <TenantProvider>
-            <LayoutContent>{children}</LayoutContent>
+            <NotificationProvider>
+              <LayoutContent>{children}</LayoutContent>
+            </NotificationProvider>
           </TenantProvider>
         </AuthProvider>
       </body>

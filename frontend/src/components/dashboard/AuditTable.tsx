@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useTenant } from "@/context/TenantContext";
 import { useAuth } from "@/context/AuthContext";
 
@@ -61,52 +61,92 @@ const translateAction = (action: string) => {
 
 interface AuditTableProps {
   refreshTrigger?: number;
+  filterAction?: string | null;
 }
 
-export function AuditTable({ refreshTrigger }: AuditTableProps) {
+export function AuditTable({ refreshTrigger, filterAction }: AuditTableProps) {
   const { activeTenant } = useTenant();
-  const { token } = useAuth();
+  const { token, refreshToken } = useAuth();
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [total, setTotal] = useState(0);
+  const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(true);
+  
+  const limit = 10; // Page size
+
+  const fetchLogs = useCallback(async (currentOffset: number) => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    
+    const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001").replace(/\/$/, "");
+    const query = new URLSearchParams({
+      limit: limit.toString(),
+      offset: currentOffset.toString()
+    });
+    if (filterAction) query.append("action", filterAction);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/audit/logs?${query.toString()}`, {
+        headers: {
+          "x-tenant-id": activeTenant.id,
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        setLogs(result.data);
+        setTotal(result.total);
+      } else if (res.status === 401) {
+        const newToken = await refreshToken();
+        if (newToken) {
+          const retryRes = await fetch(`${API_BASE}/api/audit/logs?${query.toString()}`, {
+            headers: {
+              "x-tenant-id": activeTenant.id,
+              "Authorization": `Bearer ${newToken}`
+            }
+          });
+          if (retryRes.ok) {
+            const result = await retryRes.json();
+            setLogs(result.data);
+            setTotal(result.total);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch logs", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [token, activeTenant.id, filterAction, refreshToken]);
 
   useEffect(() => {
-    let current = true;
-    const fetchLogs = async () => {
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-        const res = await fetch(`${baseUrl}/api/audit/logs`, {
-          headers: {
-            "x-tenant-id": activeTenant.id,
-            "Authorization": `Bearer ${token}`
-          }
-        });
-        if (res.ok && current) {
-          const data = await res.json();
-          setLogs(data);
-        } else if (current) {
-          console.error("Failed to fetch logs:", res.status);
-        }
-      } catch (e) {
-        console.error("Failed to fetch logs", e);
-      } finally {
-        if (current) setLoading(false);
-      }
-    };
+    setOffset(0); // Reset offset when filter or tenant changes
+    fetchLogs(0);
+  }, [activeTenant.id, filterAction, refreshTrigger, token]);
 
-    fetchLogs();
+  // Periodic refresh only for the first page
+  useEffect(() => {
+    if (offset !== 0) return;
+    const interval = setInterval(() => fetchLogs(0), 10000);
+    return () => clearInterval(interval);
+  }, [offset, activeTenant.id, filterAction, token]);
 
-    const interval = setInterval(fetchLogs, 5000);
+  const handlePrev = () => {
+    const newOffset = Math.max(0, offset - limit);
+    setOffset(newOffset);
+    fetchLogs(newOffset);
+  };
 
-    return () => {
-      current = false;
-      clearInterval(interval);
-    };
-  }, [activeTenant, refreshTrigger, token]);
+  const handleNext = () => {
+    if (offset + limit < total) {
+      const newOffset = offset + limit;
+      setOffset(newOffset);
+      fetchLogs(newOffset);
+    }
+  };
 
   return (
     <div className="glass-card rounded-2xl border border-outline-variant/5 overflow-hidden">
@@ -131,7 +171,9 @@ export function AuditTable({ refreshTrigger }: AuditTableProps) {
             </tr>
           ) : logs.length === 0 ? (
             <tr>
-              <td colSpan={6} className="px-6 py-8 text-center text-zinc-500 text-sm italic">기록된 감사 로그가 없습니다.</td>
+              <td colSpan={6} className="px-6 py-8 text-center text-zinc-500 text-sm italic">
+                {filterAction ? `"${translateAction(filterAction)}"에 해당하는 감사 로그가 없습니다.` : "기록된 감사 로그가 없습니다."}
+              </td>
             </tr>
           ) : (
             logs.map((log) => (
@@ -152,12 +194,26 @@ export function AuditTable({ refreshTrigger }: AuditTableProps) {
         </tbody>
       </table>
       <div className="px-6 py-4 bg-surface-container-low flex justify-between items-center text-xs text-zinc-500">
-        <div>총 <strong>{logs.length}</strong>개의 로그 항목 조회됨 (테넌트: {activeTenant.name})</div>
+        <div>총 <strong>{total}</strong>개의 로그 항목 (페이지: {Math.floor(offset / limit) + 1} / {Math.max(1, Math.ceil(total / limit))})</div>
         <div className="flex gap-2">
-          <button className="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest transition-colors cursor-pointer disabled:opacity-50">
+          <button 
+            type="button"
+            onClick={handlePrev}
+            disabled={offset === 0 || loading}
+            aria-label="이전 페이지"
+            title="이전 페이지"
+            className="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+          >
             <span className="material-symbols-outlined text-sm">chevron_left</span>
           </button>
-          <button className="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest transition-colors cursor-pointer disabled:opacity-50">
+          <button 
+            type="button"
+            onClick={handleNext}
+            disabled={offset + limit >= total || loading}
+            aria-label="다음 페이지"
+            title="다음 페이지"
+            className="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+          >
             <span className="material-symbols-outlined text-sm">chevron_right</span>
           </button>
         </div>

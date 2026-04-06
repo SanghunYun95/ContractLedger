@@ -24,13 +24,21 @@ export class AuditController {
     @Req() req: any,
     @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit: number,
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
+    @Query('action') action?: string,
   ) {
     const tenantId = req.tenantId; // Injected by TenantAuthGuard
-    return this.auditLogRepository.find({
-      where: { tenantId },
+    const where: any = { tenantId };
+    if (action) {
+      where.action = action;
+    }
+
+    const effectiveLimit = Math.min(limit, 200);
+    const [data, total] = await this.auditLogRepository.findAndCount({
+      where,
       order: { createdAt: 'DESC' },
-      take: Math.min(limit, 200),
+      take: effectiveLimit,
       skip: offset,
     });
+    return { data, total, limit: effectiveLimit, offset };
   }
 }
