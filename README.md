@@ -1,11 +1,5 @@
 # ContractLedger (계약 원장 관리 시스템)
-
-![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
-![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)
-![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+<img src="https://img.shields.io/badge/Next.js-000000?style=flat-square&logo=nextdotjs&logoColor=white"><img src="https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black"><img src="https://img.shields.io/badge/Tailwind%20CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white"><img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white"><img src="https://img.shields.io/badge/NestJS-E0234E?style=flat-square&logo=nestjs&logoColor=white"><img src="https://img.shields.io/badge/Google%20Cloud-4285F4?style=flat-square&logo=googlecloud&logoColor=white">
 
 > **상세 가이드**: [ContractLedger Overview](https://deepwiki.com/SanghunYun95/ContractLedger/1-contractledger-overview)
 
@@ -31,6 +25,12 @@ ContractLedger는 B2B SaaS 환경에서 계약서를 효율적이고 안전하�
 ## 🧪 테스트 시나리오 및 기능 검증 가이드
 
 처음 프로젝트를 실행하거나 데모 사이트에 접속한 경우, 아래 순서에 따라 핵심 기능을 검증할 수 있습니다.
+
+샘플 파일
+
+<a href="https://github.com/user-attachments/files/26522947/26.04.06.pdf"><img src="https://img.shields.io/badge/다운로드-불공정비밀유지계약서(26.04.06)-FF0000?style=flat-square&logo=adobearcrobatreader&logoColor=white"></a>
+
+<a href="https://github.com/user-attachments/files/26522948/default.pdf"><img src="https://img.shields.io/badge/다운로드-표준비밀유지계약서-FF0000?style=flat-square&logo=adobearcrobatreader&logoColor=white"></a>
 
 1. **로그인 및 인증**: `test@example.com` / `password123` 계정으로 접속하여 테넌트 컨텍스트(`test-tenant`) 활성화 확인 (실패 시 '보안 인증 정보 등록' 후 재시도)
 2. **PDF 업로드 및 AI 분석**: '계약 보관함'에서 영문 계약서(PDF) 업로드 후 **'분석 실행'** 버튼을 클릭하면 AI 분석이 시작되며, 진행 상태가 실시간으로 업데이트됨
