@@ -1,5 +1,12 @@
 # ContractLedger (계약 원장 관리 시스템)
 
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+
 > **상세 가이드**: [ContractLedger Overview](https://deepwiki.com/SanghunYun95/ContractLedger/1-contractledger-overview)
 
 📄 **ContractLedger (AI 기반 멀티 테넌시 계약 리스크 분석 플랫폼)**
@@ -10,7 +17,7 @@ ContractLedger는 B2B SaaS 환경에서 계약서를 효율적이고 안전하�
 - **과도한 실무 낭비**: 수십 장의 영문 계약서를 실무자가 직접 번역하고 1장으로 수기 요약하는 데 막대한 업무 시간 소요
 - **형식적 결재로 인한 리스크**: 바쁜 임원진의 일정 탓에, 회사 근처 차량 등에서 단 1분 만에 쫓기듯 요약본만 훑어보고 결재가 이루어지는 등 고액 계약에 대한 검토 부실 및 위험성 상존
 
-**해결 방안: AI를 활용해 방대한 영문 계약서를 요약하고, 조항 내 잠재적 리스크를 분석해 내는 멀티 테넌시 기반 스마트 계약 플랫폼을 기획 및 직접 개발함.**
+**해결 방안: AI를 활용해 계약서를 요약하고, 조항 내 잠재적 리스크를 분석해 내는 멀티 테넌시 기반 스마트 계약 플랫폼을 개발.**
 
 ---
 

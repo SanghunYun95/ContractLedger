@@ -47,6 +47,7 @@ jobs:
           env_vars: |
             NODE_ENV=production
             JWT_SECRET=${{ secrets.JWT_SECRET }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
             GCS_PROJECT_ID=${{ env.PROJECT_ID }}
             GCS_BUCKET_NAME=contract-ledger-files
             SYNC_DB=true
