@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Contract } from '../domain/contract.entity';
@@ -11,6 +11,8 @@ import { Readable } from 'stream';
 
 @Injectable()
 export class ContractService {
+  private readonly logger = new Logger(ContractService.name);
+
   constructor(
     @InjectRepository(Contract)
     private readonly contractRepository: Repository<Contract>,
@@ -115,6 +117,7 @@ export class ContractService {
   }
 
   async analyze(id: string, tenantId: string): Promise<Contract> {
+    this.logger.log(`[ContractService] Starting analysis for contract ${id} (Tenant: ${tenantId})`);
     const contract = await this.findOne(id, tenantId);
     
     let textToAnalyze = contract.content || '';
@@ -122,63 +125,79 @@ export class ContractService {
     // 만약 파일이 업로드되어 있다면 PDF 텍스트 추출 시도
     if (contract.fileUrl) {
       try {
-        console.log(`[ContractService] Attempting to extract text from PDF: ${contract.fileUrl}`);
-        // fileUrl에서 GCS 파일 경로 추출 (GcsStorageService 로직 참고)
+        this.logger.log(`[ContractService] PDF detected: ${contract.fileUrl}. Attempting extraction.`);
+        
+        // fileUrl에서 GCS 파일 경로 추출
         const storagePath = contract.fileUrl.replace('/api/contracts/download/', '');
+        this.logger.log(`[ContractService] GCS Storage Path extracted: ${storagePath}`);
+        
         const stream = await this.storageService.getFileStream(storagePath);
         const buffer = await this.streamToBuffer(stream);
+        this.logger.log(`[ContractService] Buffer created from stream. Size: ${buffer.length} bytes.`);
         
         const extractedText = await this.aiService.extractTextFromPdf(buffer);
         if (extractedText && extractedText.trim().length > 10) {
           textToAnalyze = extractedText;
-          console.log(`[ContractService] PDF text extracted successfully (${extractedText.length} chars)`);
-          // 추출된 텍스트를 content 필드에 백업 (선택 사항)
+          this.logger.log(`[ContractService] PDF text extraction successful. Length: ${extractedText.length} chars.`);
+          // 추출된 텍스트 백업
           contract.content = extractedText.substring(0, 10000); 
         } else {
-          console.warn(`[ContractService] Extracted text is too short or empty. Fallback to manually entered content.`);
+          this.logger.warn(`[ContractService] Extracted PDF text is too short or empty.`);
         }
-      } catch (err) {
-        console.error(`[ContractService] Failed to extract text from PDF ${contract.fileUrl}:`, err);
-        // 텍스트 추출 실패 시 기존 content가 있다면 그것으로 진행, 없다면 에러
+      } catch (err: any) {
+        this.logger.error(`[ContractService] PDF extraction failed for ${contract.fileUrl}:`, err);
         if (!textToAnalyze) {
-          throw new BadRequestException('PDF 파일에서 텍스트를 읽을 수 없습니다. 스캔된 이미지인지 확인해 주세요.');
+          this.logger.error(`[ContractService] Context: No manual content available after PDF extraction failure.`);
+          throw new BadRequestException(`PDF를 읽을 수 없고 수기 입력된 내용도 없습니다: ${err.message}`);
         }
       }
     }
 
     if (!textToAnalyze || textToAnalyze.trim().length < 20) {
+      this.logger.warn(`[ContractService] Insufficient content to analyze (Length: ${textToAnalyze?.length || 0})`);
       throw new BadRequestException('분석할 계약서 내용이 부족합니다. (최소 20자 이상 필요)');
     }
 
-    // OpenAI 실제 분석 수행
-    const { riskScore, riskAnalysis } = await this.aiService.analyzeContract(textToAnalyze);
-
-    contract.riskScore = riskScore;
-    contract.riskAnalysis = riskAnalysis;
-
-    const analyzed = await this.contractRepository.save(contract);
-
-    // 실시간 알림 전송 (오류 발생 시에도 분석 결과는 보존하기 위해 try-catch 처리)
+    this.logger.log(`[ContractService] Proceeding to AI Analysis (Text length: ${textToAnalyze.length})`);
+    
     try {
-      await this.notificationService.sendRealTimeNotification(tenantId, 'contract.analyzed', {
-        contractId: analyzed.id,
-        title: analyzed.title,
-        riskScore: analyzed.riskScore,
+      // OpenAI 실제 분석 수행
+      const { riskScore, riskAnalysis } = await this.aiService.analyzeContract(textToAnalyze);
+
+      contract.riskScore = riskScore;
+      contract.riskAnalysis = riskAnalysis;
+      contract.status = 'ANALYZED'; // 상태 업데이트
+
+      const analyzed = await this.contractRepository.save(contract);
+      this.logger.log(`[ContractService] Analysis saved to DB. Risk Score: ${riskScore}`);
+
+      // 실시간 알림 전송
+      try {
+        await this.notificationService.sendRealTimeNotification(tenantId, 'contract.analyzed', {
+          contractId: analyzed.id,
+          title: analyzed.title,
+          riskScore: analyzed.riskScore,
+        });
+        this.logger.log(`[ContractService] Real-time notification sent for ${analyzed.id}`);
+      } catch (notificationError) {
+        this.logger.error(`[ContractService] Notification failed (silent):`, notificationError);
+      }
+
+      this.eventEmitter.emit('audit.log.created', {
+        tenantId,
+        userId: 'system',
+        action: AuditAction.CONTRACT_AI_REVIEW,
+        resourceId: analyzed.id,
+        details: { riskScore: analyzed.riskScore },
       });
-    } catch (notificationError) {
-      console.error(`[ContractService] Failed to send real-time notification for contract ${analyzed.id}:`, notificationError);
+
+      return analyzed;
+    } catch (aiError) {
+      this.logger.error(`[ContractService] AI Analysis Service call failed:`, aiError);
+      throw aiError; // Re-throw to be caught by NestJS exception filters
     }
-
-    this.eventEmitter.emit('audit.log.created', {
-      tenantId,
-      userId: 'system',
-      action: AuditAction.CONTRACT_AI_REVIEW,
-      resourceId: analyzed.id,
-      details: { riskScore: analyzed.riskScore },
-    });
-
-    return analyzed;
   }
+
 
   private async streamToBuffer(stream: Readable): Promise<Buffer> {
     const chunks: any[] = [];

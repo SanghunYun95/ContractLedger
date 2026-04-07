@@ -17,8 +17,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Contract Ledger | Audit & AI Webhooks",
-  description: "The Sovereign Vault - Contract Ledger Platform",
+  title: "Contract Ledger | AI 기반 계약 분석 플랫폼",
+  description: "AI를 활용한 영문 계약서 요약 및 리스크 분석 - 스마트 계약 관리 데이터베이스",
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
