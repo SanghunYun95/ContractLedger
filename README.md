@@ -20,6 +20,13 @@ ContractLedger는 B2B SaaS 환경에서 계약서를 효율적이고 안전하�
 배포된 서비스의 실시간 주소입니다:
 - **URL**: [https://contract-ledger.web.app](https://contract-ledger.web.app)
 
+
+<video src="https://github.com/user-attachments/assets/4a43e108-2c25-4d40-a3cf-7b90b61bbc08" autoplay loop muted playsinline width="100%">
+</video>
+
+
+
+
 ---
 
 ## 🧪 테스트 시나리오 및 기능 검증 가이드
