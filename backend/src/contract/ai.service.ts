@@ -48,9 +48,9 @@ export class AiService {
       const text = data.text || '';
       this.logger.log(`[AiService] PDF text extraction complete. Extracted length: ${text.length} chars.`);
       return text;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('[AiService] Failed to extract text from PDF:', error);
-      throw new InternalServerErrorException(`PDF 텍스트 추출 중 오류가 발생했습니다: ${error.message}`);
+      throw new InternalServerErrorException(`PDF 텍스트 추출 중 오류가 발생했습니다: ${error.message || 'Unknown error'}`);
     }
   }
 
@@ -145,39 +145,9 @@ export class AiService {
         riskScore,
         riskAnalysis,
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('[AiService] OpenAI analysis totally failed:', error);
-      throw new InternalServerErrorException(`AI 계약 분석 중 오류가 발생했습니다: ${error.message}`);
-    }
-  }
-}
-[];
-      const marketStandards = Array.isArray(result.marketStandards) ? result.marketStandards : [];
-
-      // 상세 분석 객체 구조 검증
-      const detailedAnalysis =
-        result.detailedAnalysis && typeof result.detailedAnalysis === 'object'
-          ? {
-              critical: Array.isArray(result.detailedAnalysis.critical) ? result.detailedAnalysis.critical : [],
-              important: Array.isArray(result.detailedAnalysis.important) ? result.detailedAnalysis.important : [],
-              acceptable: Array.isArray(result.detailedAnalysis.acceptable) ? result.detailedAnalysis.acceptable : [],
-            }
-          : { critical: [], important: [], acceptable: [] };
-
-      return {
-        riskScore,
-        riskAnalysis: JSON.stringify({
-          overall: result.riskLevel || 'Low',
-          summary: result.summary || '분석된 특별한 위험 요소가 없습니다.',
-          partyContext: result.partyContext || '당사자 지위를 명확히 파악할 수 없습니다.',
-          redFlags,
-          marketStandards,
-          detailedAnalysis,
-        }),
-      };
-    } catch (error) {
-      this.logger.error('OpenAI analysis failed', error);
-      throw new Error('AI 계약 분석 중 오류가 발생했습니다.');
+      throw new InternalServerErrorException(`AI 계약 분석 중 오류가 발생했습니다: ${error.message || 'Unknown error'}`);
     }
   }
 }
